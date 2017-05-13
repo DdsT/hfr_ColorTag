@@ -1,7 +1,8 @@
 ﻿// ==UserScript==
 // @name          [HFR] ColorTag
 // @version       1.0.0
-// @namespace     https://github.com/DdsT/hfr_ColorTag/raw/master/hfr_ColorTag.user.js
+// @namespace     n/a
+// @downloadURL   https://github.com/DdsT/hfr_ColorTag/raw/master/hfr_ColorTag.user.js
 // @description   Ajoute une étiquette de couleur aux pseudos
 // @icon          http://reho.st/self/8be6cfd410001113ffc0e909a807205fdb5b6751.png
 // @include       http://forum.hardware.fr/forum2.php*

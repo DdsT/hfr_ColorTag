@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   DdsT
-// @version     2.0.0
+// @version     2.0.1
 // @author      DdsT
 // @downloadURL https://github.com/DdsT/hfr_ColorTag/raw/master/hfrcolortag.user.js
 // @updateURL   https://github.com/DdsT/hfr_ColorTag/raw/master/hfrcolortag.meta.js

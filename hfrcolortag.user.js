@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   DdsT
-// @version     2.0.0
+// @version     2.0.1
 // @author      DdsT
 // @downloadURL https://github.com/DdsT/hfr_ColorTag/raw/master/hfrcolortag.user.js
 // @updateURL   https://github.com/DdsT/hfr_ColorTag/raw/master/hfrcolortag.meta.js
@@ -133,7 +133,7 @@ const STYLE = "\
   float                 : left;\
 }\
 .ct-image:hover {\
- filter                 : drop-shadow(0px 0px 1px #666);\
+  filter                : drop-shadow(0px 0px 1px #666);\
 }\
 .ct-checkbox {\
   -webkit-appearance    : none;\
@@ -228,7 +228,6 @@ const STYLE = "\
 }\
 .ct-member-container {\
   overflow              : auto;\
-  height                : 70%;\
 }\
 .ct-color-settings {\
   cursor                : pointer;\
@@ -256,8 +255,8 @@ const COG_ICON       = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCA
 const UNDO_ICON      = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIJSURBVDjLpVM9aJNRFD35GsRSoUKKzQ/B0NJJF3EQlKrVgijSCBmC4NBFKihIcXBwEZdSHVoUwUInFUEkQ1DQ4CKiFsQsTrb5xNpgaZHw2Uog5t5zn0NJNFaw0guX97hwzuPcc17IOYfNlIdNVrhxufR6xJkZjAbSQGXjNAorqixSWFDV3KPhJ+UGLtSQMPryrDscPwLnAHOEOQc6gkbUpIagGmApWIb/pZRX4fjj889nWiSQtgYyBZ1BTUEj6AjPa0P71nb0Jfqwa+futIheHrzRn2yRQCUK/lOQhApBJVQJChHfnkCqOwWEQ+iORJHckUyX5ksvAEyGNuJC+s6xCRXNHNxzKMmQ4luwgjfvZp69uvr2+IZcyJ8rjIporrxURggetnV0QET3rrPxzMNM2+n7p678jUTrCiWhphAjVHR9DlR0WkSzf4IHxg5MSF0zXZEuVKWKSlCBCostS8zeG7oV64wPqxInbw86lbVXKEQ8mkAqmUJ4SxieeVhcnANFC02C7N2h69HO2IXeWC8MDj2JnqaFNAMd8f3HKjx6+LxQRmnOz1OZaxKIaF1VISYwB9ARZoQaYY6o1WpYCVYxt+zDn/XzVBv/MOWXW5J44ubRyVgkelFpmF/4BJVfOVDlVyqLVBZI5manPjajDOdcswfG9k/3X9v3/vfZv7rFBanriIo++J/f+BMT+YWS6hXl7QAAAABJRU5ErkJggg==";
 const BIN_ICON       = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA/UlEQVQoFQXBSy5DUQAA0HNf31OqpIRUTDDSEJ/E1EAiVmARNmAZFmEFjCSGZjbgFwkqBhVBiCJyX991TkgAAACAHICzhbd9O/X5WhHU0udDOp0+2HoICcDxZXup4QKFYXN+9K52l3MAUqethk3caBnT65AD0A+Tkm0Ra+qC74wcgOdwqmPWFL48uvGEHIBC07k3f5IRDW0JOQDRqhVEhZ6ulltkAOTqeFboa3iVRGQAlACoiZKIDICBCgDRQEQGQCkCqJQqJTIAPn+71ZAZEUnmI73+kAHwdXJ51zVk1IRx617i6BEhAWDv2mIzVEql97J5P9g47IcEAAAA+AfRlFkdfeEU4AAAAABJRU5ErkJggg==";
 const CROSS_ICON     = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLlZPrThNRFIWJicmJz6BWiYbIkYDEG0JbBiitDQgm0PuFXqSAtKXtpE2hNuoPTXwSnwtExd6w0pl2OtPlrphKLSXhx07OZM769qy19wwAGLhM1ddC184+d18QMzoq3lfsD3LZ7Y3XbE5DL6Atzuyilc5Ciyd7IHVfgNcDYTQ2tvDr5crn6uLSvX+Av2Lk36FFpSVENDe3OxDZu8apO5rROJDLo30+Nlvj5RnTlVNAKs1aCVFr7b4BPn6Cls21AWgEQlz2+Dl1h7IdA+i97A/geP65WhbmrnZZ0GIJpr6OqZqYAd5/gJpKox4Mg7pD2YoC2b0/54rJQuJZdm6Izcgma4TW1WZ0h+y8BfbyJMwBmSxkjw+VObNanp5h/adwGhaTXF4NWbLj9gEONyCmUZmd10pGgf1/vwcgOT3tUQE0DdicwIod2EmSbwsKE1P8QoDkcHPJ5YESjgBJkYQpIEZ2KEB51Y6y3ojvY+P8XEDN7uKS0w0ltA7QGCWHCxSWWpwyaCeLy0BkA7UXyyg8fIzDoWHeBaDN4tQdSvAVdU1Aok+nsNTipIEVnkywo/FHatVkBoIhnFisOBoZxcGtQd4B0GYJNZsDSiAEadUBCkstPtN3Avs2Msa+Dt9XfxoFSNYF/Bh9gP0bOqHLAm2WUF1YQskwrVFYPWkf3h1iXwbvqGfFPSGW9Eah8HSS9fuZDnS32f71m8KFY7xs/QZyu6TH2+2+FAAAAABJRU5ErkJggg==";
-const ROOT           = document.getElementById("mesdiscussions") || document.body;
-const HEAD           = document.getElementsByTagName("head")[0];
+const ROOT           = document.getElementById("mesdiscussions");
+const HEAD           = document.head;
 const DEFAULTSTORAGE = {
   version : VERSION,
   members : {},
@@ -701,10 +700,10 @@ let background     = document.createElement("div");
 background.id      = "ct-background";
 background.onclick = hideSettings;
 background.addEventListener("transitionend", endTranstion, false);
-window.onresize = () => {
+window.addEventListener("resize", () => {
   background.style.width = "100%"
   members.updateHeight();
-};
+});
 ROOT.appendChild(background);
 ROOT.appendChild(settings);
 
@@ -760,7 +759,7 @@ members.refresh = () => {
   members.initialize();
 }
 members.updateHeight = () => {
-  memberContainer.style.height = (document.documentElement.clientHeight - 360) + "px";
+  memberContainer.style.maxHeight = (document.documentElement.clientHeight - 360) + "px";
 };
 
 settings.appendChild(memberContainer);
@@ -841,10 +840,11 @@ function importData() {
         isOK &= typeof importedDB.members != "undefined";
         for (const name in importedDB.members) {
           isOK &= (name == name.toLowerCase()) &&
-                  /#[\da-f]{6}/i.test(importedDB.members[name][0]) &&
+                  (importedDB.members[name][0] == "" || /#[\da-f]{6}/i.test(importedDB.members[name][0])) &&
                   (importedDB.members[name][2] < 2) &&
                   (importedDB.members[name][3] < 2) &&
                   (importedDB.members[name][4] < 2);
+          console.log(name + " " + isOK);
         }
         if (!isOK) throw "liste des membres non valide.";
         db.config  = importedDB.config;
@@ -873,9 +873,9 @@ function exportData() {
     members : db.members,
     config  : db.config,
   }; 
-  const data    = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(storage));
+  const data    = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(storage, null, "\t"));
   let   a       = document.getElementById("ct-download") || document.createElement("a");
-  a.id          = "ct-download"
+  a.id          = "ct-download";
   a.href        = "data:" + data;
   a.download    = today + "_hfrcolortag.json";
   ROOT.appendChild(a);
@@ -938,11 +938,19 @@ function deleteName() {
 
 /*** Fonctions diverses ***/
 
-/* Conversion du format rgb(r,g,b) en hexadécimal */
+/* Convertir le format rgb(r,g,b) en hexadécimal */
 function rgbToHex(string) {
   if (string == "" || /#[\da-f]{6}/i.test(string)) return string;
   let [r,g,b] = string.match(/[\d]+/g).map(x => (parseInt(x)));
   return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+/* Scanner un noeud DOM et lui rajouter les pastilles */ 
+function colorTag(node) {
+  for (const element of node.querySelectorAll("td.messCase1 b.s2, table.citation b.s1 a, table.oldcitation b.s1 a")) {
+    let post = new Post(element);
+    if (!post.noAuthor) post.refresh();
+  } 
 }
 
 /* Ajouter des règles css */
@@ -955,10 +963,16 @@ function addCss(cssString) {
 
 /*** Initialisation ***/
 addCss(STYLE);
-for (const element of ROOT.querySelectorAll("td.messCase1 b.s2, table.citation b.s1 a, table.oldcitation b.s1 a")) {
-  let post = new Post(element);
-  if (!post.noAuthor) post.refresh();
-}
+colorTag(ROOT);
 GM.registerMenuCommand("Paramètres HFR Color Tag", openSettings, "p");
+
+/* Observateur pour gérer les messages ajoutés dynamiquement */
+new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const message of mutation.addedNodes) {
+      colorTag(message);
+    }
+  }
+}).observe(ROOT, {childList: true});
 
 });//fin de l'exécution asynchrone

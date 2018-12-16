@@ -5,6 +5,8 @@
 
 - L'observateur de nouveau message est maintenant en option (désactivé par défaut)
 - Mise à jour des metadonnées
+- Modification des sélecteurs pour les rendre plus permissifs
+- Modification du module d'import pour améliorer la retro-compatibilité
 - Externalisation de la compatibilité Greasemonkey 4
 - Ajout de la [licence AGPL](LICENSE)
 - Ajout de l'[historique de modification](CHANGELOG.md)

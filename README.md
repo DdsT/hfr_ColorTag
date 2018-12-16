@@ -24,6 +24,6 @@ Permet de colorier les messages et citations en fonction du membre ainsi que de 
 
 Voir l'[historique](CHANGELOG.md).
 
-## License
+## Licence
 
 Ce script est sous license [AGPL](LICENSE).

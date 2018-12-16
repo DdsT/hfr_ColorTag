@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
-// @namespace   DdsT
-// @version     2.0.1
+// @namespace   ddst.github.io
+// @version     2.1.0
 // @author      DdsT
-// @downloadURL https://github.com/DdsT/hfr_ColorTag/raw/master/hfrcolortag.user.js
-// @updateURL   https://github.com/DdsT/hfr_ColorTag/raw/master/hfrcolortag.meta.js
+// @downloadURL https://ddst.github.io/hfr_ColorTag/hfrcolortag.user.js
+// @updateURL   https://ddst.github.io/hfr_ColorTag/hfrcolortag.meta.js
 // @description Colorier et Annoter les messages en fonction du pseudo
 // @icon        https://www.hardware.fr/images_skin_2010/facebook/logo.png
 // @match       *://forum.hardware.fr/forum2.php*
 // @match       *://forum.hardware.fr/hfr/*/*sujet_*
+// @require     https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @grant       GM_registerMenuCommand
@@ -16,247 +17,226 @@
 // @grant       GM.setValue
 // ==/UserScript==
 
-/* Compatibilité GM4 */
-if (typeof GM == "undefined") GM = {};
-if (typeof GM_getValue != "undefined" && typeof GM.getValue == "undefined") {
-  GM.getValue = function(...args) {
-    return new Promise((resolve, reject) => {
-      try {
-        resolve(GM_getValue.apply(null, args));
-      } catch (err) {
-        reject(err);
-      }
-    });
-  };
-  GM.setValue = function(...args) {
-    return new Promise((resolve, reject) => {
-      try {
-        resolve(GM_setValue.apply(null, args));
-      } catch (err) {
-        reject(err);
-      }
-    });
-  };
+/*
+Copyright (C) 2018 DdsT
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see https://ddst.github.io/hfr_ColorTag/LICENSE.
+*/
+
+(async () => { //le script s'exécute de manière asynchrone pour récupérer les données via GM.getValue
+
+const STYLE = `
+.ct-button {
+  cursor                : pointer;
+  box-shadow            :  1px  1px 2px rgba(0, 0, 0, 0.05),
+                          -1px -1px 2px rgba(0, 0, 0, 0.05),
+                          -1px  1px 2px rgba(0, 0, 0, 0.05),
+                           1px -1px 2px rgba(0, 0, 0, 0.05);
 }
-if (typeof GM_registerMenuCommand == "undefined" && typeof GM.registerMenuCommand == "undefined") {
-  GM.registerMenuCommand = function(caption, commandFunc, accessKey) {
-    if (!document.body) return;
-    let menu = document.getElementById("gm-registered-menu");
-    if (!menu) {
-      menu = document.createElement("menu")
-      menu.setAttribute("id", "gm-registered-menu");
-      menu.setAttribute("type", "context");
-      document.body.appendChild(menu);
-      document.body.setAttribute("contextmenu", "gm-registered-menu");
-    }
-    let menuItem = document.createElement("menuitem");
-    menuItem.textContent = caption;
-    menuItem.addEventListener("click", commandFunc, true);
-    menu.appendChild(menuItem);
-  }
-} else {
-  GM.registerMenuCommand = GM_registerMenuCommand;
+.ct-button:hover {
+  cursor                : pointer;
+  box-shadow            :  1px  1px 3px rgba(0, 0, 0, 0.15),
+                          -1px -1px 3px rgba(0, 0, 0, 0.15),
+                          -1px  1px 3px rgba(0, 0, 0, 0.15),
+                           1px -1px 3px rgba(0, 0, 0, 0.15);
 }
-if (typeof GM_info != "undefined" && typeof GM.info == "undefined") {
-  GM.info = GM_info;
+.ct-profile {
+  border-radius         : 10px;
+  height                : 14px;
+  width                 : 14px;
+  margin-right          :  2px;
+  margin-left           :  2px;
 }
-const STYLE = "\
-.ct-button {\
-  cursor                : pointer;\
-  box-shadow            :  1px  1px 2px rgba(0, 0, 0, 0.05),\
-                          -1px -1px 2px rgba(0, 0, 0, 0.05),\
-                          -1px  1px 2px rgba(0, 0, 0, 0.05),\
-                           1px -1px 2px rgba(0, 0, 0, 0.05);\
-}\
-.ct-button:hover {\
-  cursor                : pointer;\
-  box-shadow            :  1px  1px 3px rgba(0, 0, 0, 0.15),\
-                          -1px -1px 3px rgba(0, 0, 0, 0.15),\
-                          -1px  1px 3px rgba(0, 0, 0, 0.15),\
-                           1px -1px 3px rgba(0, 0, 0, 0.15);\
-}\
-.ct-profile {\
-  border-radius         : 10px;\
-  height                : 14px;\
-  width                 : 14px;\
-  margin-right          :  2px;\
-  margin-left           :  2px;\
-}\
-.ct-quote {\
-  border-radius         : 10px;\
-  height                : 12px;\
-  width                 : 12px;\
-  margin-right          :  3px;\
-}\
-.ct-note {\
-  font-style            : italic;\
-}\
-.ct-input {\
-  font-style            : italic;\
-  font-size             : 10px;\
-  font-family           : Verdana, Arial, sans-serif, Helvetica;\
-  height                :  8px;\
-  border                :  1px solid #000;\
-  background            : rgb(0,0,0,0);\
-  width                 : 140px;\
-}\
-#ct-menu {\
-  box-shadow            : 3px 3px 2px -1px rgba(0, 0, 0, 0.4);\
-  position              : absolute;\
-  border                :  1px solid black;\
-  background            : white;\
-  z-Index               : 1003;\
-  width                 : 72px;\
-  padding               :  1px;\
-  display               : none;\
-  font-size             : 10px;\
-}\
-.ct-box {\
-  outline               :  1px solid #000;\
-  margin                :  2px;\
-  height                : 14px;\
-  width                 : 14px;\
-  float                 : left;\
-  cursor                : pointer;\
-}\
-.ct-box:hover {\
-  box-shadow            :  1px  1px 2px #666,\
-                          -1px -1px 2px #666,\
-                          -1px  1px 2px #666,\
-                           1px -1px 2px #666;\
-}\
-#ct-menu input {\
-  float                 : left;\
-}\
-.ct-image {\
-  margin                : 1px;\
-  float                 : left;\
-}\
-.ct-image:hover {\
-  filter                : drop-shadow(0px 0px 1px #666);\
-}\
-.ct-checkbox {\
-  -webkit-appearance    : none;\
-  -moz-appearance       : none;\
-  appearance            : none;\
-  color                 : #000;\
-  background-color      : #fff;\
-  cursor                : pointer;\
-  border                :  1px solid #888;\
-  border-radius         :  1px;\
-  width                 : 16px;\
-  height                : 16px;\
-  margin                :  0px;\
-  margin-right          :  4px;\
-}\
-.ct-checkbox:hover {\
-  border                : 1px solid #000;\
-}\
-.ct-checkbox:checked:after {\
-  content               : '✔';\
-  font-size             : 16px;\
-  line-height           : 12px;\
-}\
-#ct-menu label {\
-  font-size             :  9px;\
-  height                : 14px;\
-  width                 : 71px;\
-  margin-top            :  1px;\
-  margin-left           :  1px;\
-  margin-bottom         :  3px;\
-  line-height           : 15px;\
-  float                 : left;\
-  text-align            : left;\
-}\
-.ct-rainbow {\
-  background-image      : linear-gradient(45deg, red, orange, yellow, green, blue, indigo);\
-}\
-#ct-transparent {\
-  background-image      : linear-gradient(#ddd, #ddd),\
-                          linear-gradient(90deg, #000 50%, #fff 0),\
-                          linear-gradient(#000 50%, #fff 0);\
-  background-blend-mode : lighten, difference, normal;\
-  background-size       : 10px 10px;\
-}\
-#ct-background {\
-  position              : fixed;\
-  left                  : 0;\
-  top                   : 0;\
-  height                : 100%;\
-  width                 : 100%;\
-  background-color      : #fff;\
-  z-index               : 1001;\
-  display               : none;\
-  opacity               : 0;\
-  transition            : opacity 0.7s ease 0s;\
-}\
-#ct-settings {\
-  box-shadow            : 0 4px  8px 0 rgba(0, 0, 0, 0.2),\
-                          0 6px 20px 0 rgba(0, 0, 0, 0.19);\
-  position              : fixed;\
-  width                 : 700px;\
-  background            : white;\
-  z-index               : 1002;\
-  display               : none;\
-  opacity               : 0;\
-  left                  : 50%;\
-  top                   : 50%;\
-  transform             : translate(-50%, -50%);\
-  transition            : opacity 0.7s ease 0s;\
-  padding               : 0 16px 16px 16px;\
-}\
-.ct-table {\
-  border-spacing        : 0px;\
-}\
-.ct-table td, .ct-table th{\
-  padding               : 4px;\
-}\
-.ct-table td a{\
-  color                 : #000;\
-}\
-.ct-palette {\
-  outline               :  1px solid #000;\
-  margin                :  3px;\
-  height                : 28px;\
-  width                 : 28px;\
-  float                 : left;\
-  cursor                : pointer;\
-}\
-.ct-submit {\
-  width                 : 135px;\
-  margin                : 10px 2px 10px 2px;\
-}\
-.ct-member-container {\
-  overflow              : auto;\
-}\
-.ct-color-settings {\
-  cursor                : pointer;\
-  width                 : 20px;\
-}\
-.ct-note-settings {\
-  cursor                : text;\
-  font-style            : italic;\
-}\
-.ct-input-settings {\
-  border                : 0;\
-  font-family           : Verdana, Arial, sans-serif, Helvetica;\
-  line-height           : 0;\
-  font-style            : italic;\
-  width                 : 100%;\
-  padding-left          : 0;\
-  padding-top           : 2px;\
-}\
-.ct-checkbox-cell {\
-  width                 : 20px;\
-}";
+.ct-quote {
+  border-radius         : 10px;
+  height                : 12px;
+  width                 : 12px;
+  margin-right          :  3px;
+}
+.ct-note {
+  font-style            : italic;
+}
+.ct-input {
+  font-style            : italic;
+  font-size             : 10px;
+  font-family           : Verdana, Arial, sans-serif, Helvetica;
+  height                :  8px;
+  border                :  1px solid #000;
+  background            : rgb(0,0,0,0);
+  width                 : 140px;
+}
+#ct-menu {
+  box-shadow            : 3px 3px 2px -1px rgba(0, 0, 0, 0.4);
+  position              : absolute;
+  border                :  1px solid black;
+  background            : white;
+  z-Index               : 1003;
+  width                 : 72px;
+  padding               :  1px;
+  display               : none;
+  font-size             : 10px;
+}
+.ct-box {
+  outline               :  1px solid #000;
+  margin                :  2px;
+  height                : 14px;
+  width                 : 14px;
+  float                 : left;
+  cursor                : pointer;
+}
+.ct-box:hover {
+  box-shadow            :  1px  1px 2px #666,
+                          -1px -1px 2px #666,
+                          -1px  1px 2px #666,
+                           1px -1px 2px #666;
+}
+#ct-menu input {
+  float                 : left;
+}
+.ct-image {
+  margin                : 1px;
+  float                 : left;
+}
+.ct-image:hover {
+  filter                : drop-shadow(0px 0px 1px #666);
+}
+.ct-checkbox {
+  -webkit-appearance    : none;
+  -moz-appearance       : none;
+  appearance            : none;
+  color                 : #000;
+  background-color      : #fff;
+  cursor                : pointer;
+  border                :  1px solid #888;
+  border-radius         :  1px;
+  width                 : 16px;
+  height                : 16px;
+  margin                :  0px;
+  margin-right          :  4px;
+}
+.ct-checkbox:hover {
+  border                : 1px solid #000;
+}
+.ct-checkbox:checked:after {
+  content               : '✔';
+  font-size             : 16px;
+  line-height           : 12px;
+}
+#ct-menu label {
+  font-size             :  9px;
+  height                : 14px;
+  width                 : 71px;
+  margin-top            :  1px;
+  margin-left           :  1px;
+  margin-bottom         :  3px;
+  line-height           : 15px;
+  float                 : left;
+  text-align            : left;
+}
+.ct-rainbow {
+  background-image      : linear-gradient(45deg, red, orange, yellow, green, blue, indigo);
+}
+#ct-transparent {
+  background-image      : linear-gradient(#ddd, #ddd),
+                          linear-gradient(90deg, #000 50%, #fff 0),
+                          linear-gradient(#000 50%, #fff 0);
+  background-blend-mode : lighten, difference, normal;
+  background-size       : 10px 10px;
+}
+#ct-background {
+  position              : fixed;
+  left                  : 0;
+  top                   : 0;
+  height                : 100%;
+  width                 : 100%;
+  background-color      : #fff;
+  z-index               : 1001;
+  display               : none;
+  opacity               : 0;
+  transition            : opacity 0.7s ease 0s;
+}
+#ct-settings {
+  box-shadow            : 0 4px  8px 0 rgba(0, 0, 0, 0.2),
+                          0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  position              : fixed;
+  width                 : 700px;
+  background            : white;
+  z-index               : 1002;
+  display               : none;
+  opacity               : 0;
+  left                  : 50%;
+  top                   : 50%;
+  transform             : translate(-50%, -50%);
+  transition            : opacity 0.7s ease 0s;
+  padding               : 0 16px 16px 16px;
+}
+.ct-table {
+  border-spacing        : 0px;
+}
+.ct-table td, .ct-table th{
+  padding               : 4px;
+}
+.ct-table td a{
+  color                 : #000;
+}
+.ct-palette {
+  outline               :  1px solid #000;
+  margin                :  3px;
+  height                : 28px;
+  width                 : 28px;
+  float                 : left;
+  cursor                : pointer;
+}
+.ct-submit {
+  width                 : 135px;
+  margin                : 10px 2px 10px 2px;
+}
+.ct-member-container {
+  overflow              : auto;
+}
+.ct-color-settings {
+  cursor                : pointer;
+  width                 : 20px;
+}
+.ct-note-settings {
+  cursor                : text;
+  font-style            : italic;
+}
+.ct-input-settings {
+  border                : 0;
+  font-family           : Verdana, Arial, sans-serif, Helvetica;
+  line-height           : 0;
+  font-style            : italic;
+  width                 : 100%;
+  padding-left          : 0;
+  padding-top           : 2px;
+}
+.ct-checkbox-cell {
+  width                 : 20px;
+}
+`;
+
 const VERSION        = GM.info.script.version;
+
 const EDIT_ICON      = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAKZSURBVDjLpZM7TFNhFMd/t/f2IqVQqAWM72IVMUEjIRoiYnTxEWEyTjqoiYNuxkSjk5uJg4ODDjoYE6ODm4sOJlopqNRY5VXC09oCRaCg3t572++7DspTnTzJyTnfyTn/739O8lccx+F/TBsdHb0MHAOQUuI4DlLKJS6E+CP+9gdKKpXKBwIBFWAxm7n8b3Euj8ViQnMcR3W73dyMCmzjG9PxVzi5H7jKa6gI1nLE208oFOLy8wyGaWNkbQwzx+PTIYQQqrb417reW+RT7xhJJBieMHCufgQgl8txbV8hUhbMrwUghECbewDkKnfStH0NB3SN1o5OYqo63xgOhymWXQQyHajeWka+vsRdth9NCPFrOC95m16Npk3jLSkhau9masoE7y+A+tA0+cQEhetO4AvuJDNUTc+LhwsMMok+yoNVPNHqmPpss8Kvs+pHEgAr/QzViuPfvIepgR50xaa4ZBXe0soFBmuKZumaLEX6Symr1DFnTYrlBGq2G83di6/qINboI3SPwsiHXqSjk/Q1LgCcP9wwfwvDMLAsC2syQYHZiW9TC2byDi49j9u7gSLnC4FDNxho78Y1B5BIJIhGowwPD+PxeLDGwpBpxRdqwUzexuXOYc9uZOzle2aqTlFYvgkpJUosFusWQtQIIaivr1cikYhjj7dR4Rlna1Mz9vh9FNXGnFlLOvweacwE+7ZcGfp9ux5luRbunVt/pqH55N28UsFKfytlFTrmzDomX79JSyvbUH2hbXCJFpaLo2TjlrvbGs8Sf3SRvnCEgvU7yKfjqTJdPVh7qX1web9reSHeP5a3u54S3LGXoqJqkh2fvptZ+0jtpfbOv6nxjxWON/mzdVWV2q6aII7bimTTE6eOXv84+C85/wR0RnLQ/rM7uwAAAABJRU5ErkJggg==";
 const COG_ICON       = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAABkklEQVQoz1VRTUsCYRBe/AHe/Qn+j710EbKLVJcyiAqLLkWJkdkSUdChOpQRRWVRG6RQUqirtq7pupZRUvRxyOIlIU9ed5+mbSFjDjPvzDPPM+8MB+7PVG9ekiXJ25qzXMVZtqu2fP0D7xDrZ7aY/djZAqiEy3qRKY4se8ULYizqENm+vhO2ADf+Z3zhCdlmyqjiDieG2FTBEMeC3wQUA7LxTIVHAlVNfwsVV5gwRgOWRE64QwkFXGAD28hCQYb65wVT4kqTa+nGAzQkMKOM81P8knJJIA2LjblaSONk/ZOICyhjD7P8T886L0ImNoUGHtI5SX8jTYU6olg2Aav8ATHEkaZ8j87taEu1rcY1QUrYVNb4FZLIkNw5+hqeWodmDikKORorhzwOsU9RCqcUDQjWHo4CEeOeyioqNEuemHJI0mvY6P/95q4/gVdEEGoKhkzqPmO4GSH9abj91h6C4RG9j405Qkwlhl7W6fAwl94WbjnWiHPQPmkL1pOIoaveaeu2u5z/rvlrPq9Hapfc/879DQmIXQjyme6GAAAAAElFTkSuQmCC";
 const UNDO_ICON      = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIJSURBVDjLpVM9aJNRFD35GsRSoUKKzQ/B0NJJF3EQlKrVgijSCBmC4NBFKihIcXBwEZdSHVoUwUInFUEkQ1DQ4CKiFsQsTrb5xNpgaZHw2Uog5t5zn0NJNFaw0guX97hwzuPcc17IOYfNlIdNVrhxufR6xJkZjAbSQGXjNAorqixSWFDV3KPhJ+UGLtSQMPryrDscPwLnAHOEOQc6gkbUpIagGmApWIb/pZRX4fjj889nWiSQtgYyBZ1BTUEj6AjPa0P71nb0Jfqwa+futIheHrzRn2yRQCUK/lOQhApBJVQJChHfnkCqOwWEQ+iORJHckUyX5ksvAEyGNuJC+s6xCRXNHNxzKMmQ4luwgjfvZp69uvr2+IZcyJ8rjIporrxURggetnV0QET3rrPxzMNM2+n7p678jUTrCiWhphAjVHR9DlR0WkSzf4IHxg5MSF0zXZEuVKWKSlCBCostS8zeG7oV64wPqxInbw86lbVXKEQ8mkAqmUJ4SxieeVhcnANFC02C7N2h69HO2IXeWC8MDj2JnqaFNAMd8f3HKjx6+LxQRmnOz1OZaxKIaF1VISYwB9ARZoQaYY6o1WpYCVYxt+zDn/XzVBv/MOWXW5J44ubRyVgkelFpmF/4BJVfOVDlVyqLVBZI5manPjajDOdcswfG9k/3X9v3/vfZv7rFBanriIo++J/f+BMT+YWS6hXl7QAAAABJRU5ErkJggg==";
 const BIN_ICON       = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA/UlEQVQoFQXBSy5DUQAA0HNf31OqpIRUTDDSEJ/E1EAiVmARNmAZFmEFjCSGZjbgFwkqBhVBiCJyX991TkgAAACAHICzhbd9O/X5WhHU0udDOp0+2HoICcDxZXup4QKFYXN+9K52l3MAUqethk3caBnT65AD0A+Tkm0Ra+qC74wcgOdwqmPWFL48uvGEHIBC07k3f5IRDW0JOQDRqhVEhZ6ulltkAOTqeFboa3iVRGQAlACoiZKIDICBCgDRQEQGQCkCqJQqJTIAPn+71ZAZEUnmI73+kAHwdXJ51zVk1IRx617i6BEhAWDv2mIzVEql97J5P9g47IcEAAAA+AfRlFkdfeEU4AAAAABJRU5ErkJggg==";
 const CROSS_ICON     = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLlZPrThNRFIWJicmJz6BWiYbIkYDEG0JbBiitDQgm0PuFXqSAtKXtpE2hNuoPTXwSnwtExd6w0pl2OtPlrphKLSXhx07OZM769qy19wwAGLhM1ddC184+d18QMzoq3lfsD3LZ7Y3XbE5DL6Atzuyilc5Ciyd7IHVfgNcDYTQ2tvDr5crn6uLSvX+Av2Lk36FFpSVENDe3OxDZu8apO5rROJDLo30+Nlvj5RnTlVNAKs1aCVFr7b4BPn6Cls21AWgEQlz2+Dl1h7IdA+i97A/geP65WhbmrnZZ0GIJpr6OqZqYAd5/gJpKox4Mg7pD2YoC2b0/54rJQuJZdm6Izcgma4TW1WZ0h+y8BfbyJMwBmSxkjw+VObNanp5h/adwGhaTXF4NWbLj9gEONyCmUZmd10pGgf1/vwcgOT3tUQE0DdicwIod2EmSbwsKE1P8QoDkcHPJ5YESjgBJkYQpIEZ2KEB51Y6y3ojvY+P8XEDN7uKS0w0ltA7QGCWHCxSWWpwyaCeLy0BkA7UXyyg8fIzDoWHeBaDN4tQdSvAVdU1Aok+nsNTipIEVnkywo/FHatVkBoIhnFisOBoZxcGtQd4B0GYJNZsDSiAEadUBCkstPtN3Avs2Msa+Dt9XfxoFSNYF/Bh9gP0bOqHLAm2WUF1YQskwrVFYPWkf3h1iXwbvqGfFPSGW9Eah8HSS9fuZDnS32f71m8KFY7xs/QZyu6TH2+2+FAAAAABJRU5ErkJggg==";
+/* Icons by Mark James - http://www.famfamfam.com/lab/icons/silk/ - CC BY 2.5 - https://creativecommons.org/licenses/by/2.5/ */
+
 const ROOT           = document.getElementById("mesdiscussions");
-const HEAD           = document.head;
 const DEFAULTSTORAGE = {
   version : VERSION,
   members : {},
@@ -265,12 +245,12 @@ const DEFAULTSTORAGE = {
     displayQuote    : 0,
     postBackground  : 0,
     quoteBackground : 0,
+    observeNewPost  : 0,
     palette         : ["#b7b7b7", "#ffff00", "#ffc000", "#ff0000", "#c9462c", "#66ff33", "#00cdff", "#008cf4", "#057c85", "#ff99ff", "#7030a0", "#808000", "#000000"]
   }
 };
 const DEFAULTSTRING  = JSON.stringify(DEFAULTSTORAGE);
-
-GM.getValue("storage", DEFAULTSTRING).then(storage => { //le script s'exécute une fois les données stockées disponibles
+const STORAGE        = await GM.getValue("storage", DEFAULTSTRING);
 
 /* un Post décrit une intervention d'un participant de la page (dans une citation ou bien dans un message complet) */
 class Post {
@@ -529,19 +509,19 @@ function refreshParticipants() {
 }
 
 /* Base de données contenant la configuration, les membres et leurs données */
-let db  = JSON.parse(storage);
+let db  = JSON.parse(STORAGE);
 db.save = () => {
   let sortedMembers = {};
   for (const key of Object.keys(db.members).sort()) {
     sortedMembers[key] = db.members[key];
   }
   db.members = sortedMembers;
-  const storage = {
+  const newStorage = {
     version : VERSION,
     members : db.members,
     config  : db.config,
   };
-  GM.setValue("storage", JSON.stringify(storage));
+  GM.setValue("storage", JSON.stringify(newStorage));
 };
 db.add           = (name) => {db.members[name] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground];}
 db.remove        = (name) => {delete db.members[name]; db.save();}
@@ -867,13 +847,13 @@ function exportData() {
   let   d       = new Date();
   const today   = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
   const time    = d.getHours()    + ":" + d.getMinutes()     + ":" + d.getSeconds();
-  const storage = {
+  const exportStorage = {
     version : VERSION,
     date    : today + " " + time,
     members : db.members,
     config  : db.config,
   }; 
-  const data    = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(storage, null, "\t"));
+  const data    = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportStorage, null, "\t"));
   let   a       = document.getElementById("ct-download") || document.createElement("a");
   a.id          = "ct-download";
   a.href        = "data:" + data;
@@ -947,22 +927,14 @@ function rgbToHex(string) {
 
 /* Scanner un noeud DOM et lui rajouter les pastilles */ 
 function colorTag(node) {
-  for (const element of node.querySelectorAll("td.messCase1 b.s2, table.citation b.s1 a, table.oldcitation b.s1 a")) {
+  for (const element of node.querySelectorAll(".messagetable b.s2, table.citation b.s1 a, table.oldcitation b.s1 a")) {
     let post = new Post(element);
     if (!post.noAuthor) post.refresh();
   } 
 }
 
-/* Ajouter des règles css */
-function addCss(cssString) {
-  let css       = document.createElement("style");
-  css.type      = "text/css";
-  css.innerHTML = cssString;
-  HEAD.appendChild(css);
-}
-
 /*** Initialisation ***/
-addCss(STYLE);
+GM.addStyle(STYLE);
 colorTag(ROOT);
 GM.registerMenuCommand("Paramètres HFR Color Tag", openSettings, "p");
 
@@ -975,4 +947,4 @@ new MutationObserver((mutations) => {
   }
 }).observe(ROOT, {childList: true});
 
-});//fin de l'exécution asynchrone
+})(); // Fin de l'exécution asynchrone

@@ -6,7 +6,7 @@
 - L'observateur de nouveau message est maintenant en option (désactivé par défaut)
 - Mise à jour des metadonnées
 - Externalisation de la compatibilité Greasemonkey 4
-- Ajout de la [license AGPL](LICENSE)
+- Ajout de la [licence AGPL](LICENSE)
 - Ajout de l'[historique de modification](CHANGELOG.md)
 - Mise en forme du [README](README.md)
 - Changements syntaxiques mineurs

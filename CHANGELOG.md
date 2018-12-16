@@ -1,5 +1,5 @@
 
-# Changelog
+# Historique
 
 ## v2.1.0 (2017-12-17)
 

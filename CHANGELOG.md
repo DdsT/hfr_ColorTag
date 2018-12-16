@@ -1,7 +1,7 @@
 
 # Historique
 
-## v2.1.0 (2018-12-17)
+## v2.1.0 (2018-12-16)
 
 - L'observateur de nouveau message est maintenant en option (désactivé par défaut)
 - Mise à jour des metadonnées

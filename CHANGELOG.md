@@ -1,6 +1,12 @@
 
 # Historique
 
+## v2.2.0 (2018-12-18)
+
+- Ajout de la fonctionnalité liste noire / liste blanche pour les sujets
+- Changement de l'icône pour la suppression de membre
+- Amélioration de la fonction de réparation de base de données
+
 ## v2.1.0 (2018-12-16)
 
 - L'observateur de nouveau message est maintenant en option (désactivé par défaut)

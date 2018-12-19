@@ -1,6 +1,12 @@
 
 # Historique
 
+## v2.3.0 (2018-12-19)
+
+- Transformation de la fonctionnalité liste noire / liste blanche en une fonction de personnalisation spécifique par sujet
+- Correction d'un bug lors de l'import d'une base de données sans version
+- Correction d'un bug lors de la suppression d'un membre depuis le panneau de configuration
+
 ## v2.2.0 (2018-12-18)
 
 - Ajout de la fonctionnalité liste noire / liste blanche pour les sujets

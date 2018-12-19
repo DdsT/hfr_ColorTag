@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   ddst.github.io
-// @version     2.2.0
+// @version     2.3.0
 // @author      DdsT
 // @downloadURL https://ddst.github.io/hfr_ColorTag/hfrcolortag.user.js
 // @updateURL   https://ddst.github.io/hfr_ColorTag/hfrcolortag.meta.js
@@ -235,10 +235,9 @@ const COG_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1
 const UNDO_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIJSURBVDjLpVM9aJNRFD35GsRSoUKKzQ/B0NJJF3EQlKrVgijSCBmC4NBFKihIcXBwEZdSHVoUwUInFUEkQ1DQ4CKiFsQsTrb5xNpgaZHw2Uog5t5zn0NJNFaw0guX97hwzuPcc17IOYfNlIdNVrhxufR6xJkZjAbSQGXjNAorqixSWFDV3KPhJ+UGLtSQMPryrDscPwLnAHOEOQc6gkbUpIagGmApWIb/pZRX4fjj889nWiSQtgYyBZ1BTUEj6AjPa0P71nb0Jfqwa+futIheHrzRn2yRQCUK/lOQhApBJVQJChHfnkCqOwWEQ+iORJHckUyX5ksvAEyGNuJC+s6xCRXNHNxzKMmQ4luwgjfvZp69uvr2+IZcyJ8rjIporrxURggetnV0QET3rrPxzMNM2+n7p678jUTrCiWhphAjVHR9DlR0WkSzf4IHxg5MSF0zXZEuVKWKSlCBCostS8zeG7oV64wPqxInbw86lbVXKEQ8mkAqmUJ4SxieeVhcnANFC02C7N2h69HO2IXeWC8MDj2JnqaFNAMd8f3HKjx6+LxQRmnOz1OZaxKIaF1VISYwB9ARZoQaYY6o1WpYCVYxt+zDn/XzVBv/MOWXW5J44ubRyVgkelFpmF/4BJVfOVDlVyqLVBZI5manPjajDOdcswfG9k/3X9v3/vfZv7rFBanriIo++J/f+BMT+YWS6hXl7QAAAABJRU5ErkJggg==";
 const DEL_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAKRSURBVDjLpZNrSNNRGIeVuaSLrW2NCozlSsrCvqifKrG1vyznRDLQMi9TsamsUCzvSWJKC0Ms0/I2hratmVbi3bLIysRZlgh9qFGuCKOF5KaonV9n+yAGokIHHs7hhd/zvofDcQHg8j8sW0wN2FpQJuVNl8u2QC3loEDMtUX7CYrXJDjrx8u6FcYlNVE83KbciOCiNISD9MDNRHaQf3lVQZWMgwYaVNNQqcwBF1dCBbhwlIczfpypVQWlgZvQVZUPS6cag7XpOBckQIZkB9IYEZIPcee02XL3FQU1scKfM98/YOpFFb72XseooRDm9quwmk3QKXdPvdOkrltRUBG9f8A6dBeTw0bY3+ooeufZatLhToLv8IpX2CZrYnsfTtXqVP6YHa7FzFirE/ubJrRk+sM3UHlfwNSsX1YgCNG586WNKZ7SPox9mYYhLwz6PLkTx/n5+G94Bj8BT1x3ni+u3vCPgH/c4OoRbIgXhg5g3GJHowXIGANSXgOJT4G4DkBTXolnMT7oFbPxgNlo7WDYuYuCAxH14ZKTahgHF1A9CqheESj7CZK6CWIfElwrqsRI5hHMtJeBjHfBps/AUJrvn55jbiqnYCR/38JkWzZu1rchvpN2pR0VjwhimglONREYw/fATsOokANZXKDECz/UQeiWsD45BaMFPsTaU4So5AYU99oQ3Qyc1hNEagkiagn66NjE1IKl61fhdlp3I07Be60qx5TjPa9QlMwHxPdDQUdPWELrCSGm6xIBGpq96AIr5bOShW6GZVl8BbM+xeNSbjF/V3hbtTBIMyFi7tlEwc1zIolxLjM0bv5l4l58y/LCZA4bH5Nc8VjuttDFsHLX/G0HIndm045mx9h0n3CEHfW/dpehdpL0UXsAAAAASUVORK5CYII=";
 const CROSS_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAIhSURBVDjLlZPrThNRFIWJicmJz6BWiYbIkYDEG0JbBiitDQgm0PuFXqSAtKXtpE2hNuoPTXwSnwtExd6w0pl2OtPlrphKLSXhx07OZM769qy19wwAGLhM1ddC184+d18QMzoq3lfsD3LZ7Y3XbE5DL6Atzuyilc5Ciyd7IHVfgNcDYTQ2tvDr5crn6uLSvX+Av2Lk36FFpSVENDe3OxDZu8apO5rROJDLo30+Nlvj5RnTlVNAKs1aCVFr7b4BPn6Cls21AWgEQlz2+Dl1h7IdA+i97A/geP65WhbmrnZZ0GIJpr6OqZqYAd5/gJpKox4Mg7pD2YoC2b0/54rJQuJZdm6Izcgma4TW1WZ0h+y8BfbyJMwBmSxkjw+VObNanp5h/adwGhaTXF4NWbLj9gEONyCmUZmd10pGgf1/vwcgOT3tUQE0DdicwIod2EmSbwsKE1P8QoDkcHPJ5YESjgBJkYQpIEZ2KEB51Y6y3ojvY+P8XEDN7uKS0w0ltA7QGCWHCxSWWpwyaCeLy0BkA7UXyyg8fIzDoWHeBaDN4tQdSvAVdU1Aok+nsNTipIEVnkywo/FHatVkBoIhnFisOBoZxcGtQd4B0GYJNZsDSiAEadUBCkstPtN3Avs2Msa+Dt9XfxoFSNYF/Bh9gP0bOqHLAm2WUF1YQskwrVFYPWkf3h1iXwbvqGfFPSGW9Eah8HSS9fuZDnS32f71m8KFY7xs/QZyu6TH2+2+FAAAAABJRU5ErkJggg==";
-const BLADD_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS40E0BoxAAAAzRJREFUOE9Vk2tIU2EYx4/nnJ3ZjLywmabTqWsrLxiludUukmVl9wuFZeSsUWrT5YZrK5umNYu12XJdpISkorA+WBFoERQREUQXoo9FBH0I+hLdiPTfc451qAN/DgfO7/c+7/O8LwNASnfA6+jfUfn5YJUGvcumI7YqE6fXZOHcZuPE2a1zfsUdlm9xh/VrzFn9Kdq4+t1hX0tnMBhUyYJer3PYY9eAYZj/kiSw0EzlYVArUZyphFmnQm1ZOs7XlUyE2pvOyIJwW/1Dp1ktQdoUDhnJLNTTWKSqWExTskhUsFBwk9JEPgH2mUkYrJ87LguibXXPt5SrwbMMCtNZGNUs9BoWujQWWpJlkSwrmZME0e25EHgG+5bqJmExJz21b1eVpiF5CoPyHAXmZfMopRRn8iTkYUznSMiBJUGkoQQ2QyqGGq2/ZMFZz8ZPNkMyctJ4Kk+AtUDAgjwBplwFyrUKzKWUzlCATWBwyV2GKy7LxJEDHp8suOhd+dOYoUIJ/VRFgiq9gEq9Arb8ySzMF1CRw0tbvNJcgc5gR4HIyYIR32Iqn4NJJ2ARrV5ZQCAJLARb/wjm5/JSI6+12dAV7NDKAppn2q1AtdRdmwQrpdj1FALFWChlWh4qgcPtjuUghpUF3cH9puv+aghcAoFi6QSSwErbEIVWgkMnwmjva4S7twHurt0Tm/yLDsuCns4DNVf9y6hBCbDmKaTy7QSLsYlwPIKuYQduvYrj+YcxRO80YXO0BItbimNMd2eH4ULI9d6zrhAzaN7bTIlYPycRNYXUi5lURZ4Su0O1uP40gpHXMVoPCN91IjK2CzXush9MpMffd79/By4HVqBniwF9DiPiO2fhXKMRQ67ZNLIirN1fgZvPBiT473PjZRzWPflgBo62Pw5sNUkn7N9wNG+xqSkqDkv2FuHYaANCY/USHBqtR/TuLpibs78zsVDgcqx1KeqWzMZKsw6WogwU61Kh1aiQksRjCt2BI5FD2BCeheNjOzHyol96i9+TPeg6aBgI+x9e7PO9GT7Z/vHGae+X0QHPzweDe8efDLXi0WAT7p1ywhXworKlCDZXAZa7532zu/RhAMxv1Tvm0FUUCQEAAAAASUVORK5CYII=";
-const BLDEL_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS40E0BoxAAAA0RJREFUOE9Vk1tMU1kYhU/PrbVoEdIiyBRawRa5iFEYytgWRrQgijrGxKCYEQEjOqhDkdpiOTVFcbyBKKJEm4hIMOokAko00URDjGNiog++GY1RH9SoifEyMaXLv4fJGT3Jejvft9f+994MADlBX1P1sZriD60lBuwrm4auiiT0LE/GqdXWyMm1c8Ld1fbP3dWOT111rrcd9cue7fFsDUiSpFUE+5rqLriLDGAY5ofEiCwMk3lY9GpkJ6lRaNKiMi8Bp6tyIu3Nm08ogoON68fqCvUyZJzKITGWhV7HIk7LQqdmoRFYCNyEVMOrUDQzBqH1c8cVQUdj1YM1+XrwLIPMBBZWPYt0AwtTPAsjyZJJlhzLyYKO31Mh8gx2lpom4GiOuiufVuTGI3YSg/wUAfN+4pFLyU7iScjDmsCRkANLgsMbcuC0xKGv3hFWBCfdq946LbFIieepnghHmohfzCJsqQLyjQLmUnKnC2BVDM5tz8Nggz2yd5fbowj6m5Z+tSZqkUM/lZCgJF1EcboA54yJzJ8hoiCFl7c4uKUAAcmfFuUUwWXPQqrPwWYSsYBWL04jkAR2gh3/CX5O5eVBXmx0YrfkNyoCOs/4EZ9Lnq5ThtVyitIpBEZjp+QZeWhFDlf9i0EMqwiCUovtktcFkVMRGK1OIAkctI2o8NcMHYZ7DuH6hnkYKdcjVFUQlqTAWUXQFthVft5bRgNSwWEW5PpFBEfjpJUHjxzAwx0OfLlyCOOPRvFpsBH3tuSEgy07u5lgwG85097w3P1bJqbTea+zabByjgblmTSLmdTCrMbIutn4TDDdb8ATB+w1483+YvRX5j5nDrd5O28dq8GAbwna1ljQWW1Fd20GTtVb0dcwCwPbs9BbU4bI/b+p7P/feykR51dlRJjev5rv+tba5Bv2fTg67+hQdRoVQn+swMfTNQBB/zYzeEd5tonDqEt4wXS1+wa6tpWiatEsLC00wZ6ViGxTHIwGLabG8JhEb8DfKuGfjRl46THjlVfA41oVblTw4dFFQgsT3N1q6T3oHevv9Dy5cLT59VBP08drve6vt0N/jt/r24Y7oc24ebwOezbW4hI98auuKRgu1b4aKtf5ATDfACql5etxVmaNAAAAAElFTkSuQmCC";
-const WLADD_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAK9SURBVBgZBcHLi1VlAADw3/edc+fRmOP4YEzERxQYZGaQaQ8qRDCK+gPcGC1rYbjRWtqiTaAULWrRItwVVAaFBUIvhqjAyixIE41JB8fxzsy9c+855ztfv1/IOYPDH1/bg5N3rxnb169b/bpVt62Vpu1iCTeRsIB5fIizJUDbNI/s2rhq39EnNwCAXtVO9qt2cmGQNlc1S8Pkys1lX1zqHcCREqBtmunVIwFcu510QlAGipLRTrRlNCpi1CnYvXncpsmJte//OPtWBEh1vXqipGlZqoJuze0h3QHdAfMrzC0ncPz0Vfu2T7h/fWdDCZDqeu2dI1FvSG+QxBiUKApiQSEoAi1CWjRzecEvV7uzJUCqqunJ8UJ3pdEfZjFmRSSmoIgUsqJALtxYHDr11d+LOFwCNFW1dXp1R3eQNZApUhAzEoWszFGbSZ2kqZrtn7762K0IkKrh1o2To3pVFiJFCCIiAiBkcqYZDqVqmKCEgye+HC+LODLaiaqURBlZRhJAQIzUKVnu9RssQgnNsNowMTEmBlrIhEAU5EwIXLx0xl+XP7fUXzAV+0V3+cbrHHyjhFQN7ygnRpSRIgapDeSsRQj8+udH5vtfe/rxh21ee69zFz4JM79fP7H3lU1r4hNHTq9vqurEnh1bXF/MrtxIbi0lvYqUsxCyny6c9uCOXVJMdt11QAq1vTsfhZfLVFX78ezPF/+xsFJaHmZ1yoZ1UDWtJrWWuv/phFWeue8lcHT/e8789i4+GytTXT/0wlMPjL92aC8ASJk6ZVXD88e7Lsz+4Pzsd44d+MCbZ180VozCoNi48+A9U5MTz80v1a7O9cwtDiz2a3WTFTEa6QQpDX3zxxnbpre52f9Xtzfn+/PfWrw9PBV2Hzq5HkewFeuwDlOYwuTYSKczNtYRRs5ZSTPaPEDok9+eeWf22P/PLlOL9Py8xgAAAABJRU5ErkJggg==";
-const WLDEL_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAK9SURBVBgZBcFLiFVlAADg7//PuXdmGp3xMeIokk1USG8jKmlRYJJU1K6NRILQopXVImoVFBGBpLteu2gVLYyiUALFRSVk0aKC0nyE5uA43pm598495/zn7/tCzhns//LSQzh867rxXYO6NahbddsaNm0Py7iGhEUs4DMcKwHapnn4vtk1u157bBMA6Fft9KBqpxdX07aqZnmUnL+24tuz/T04WAK0TbN5qhvApRtJJwRloCgZ60Q3j0VFjDoFO7dN2Do9ueGT05cPRYBU11OTJU3LchX0am6M6K3SW2VhyPxKAm98ftGuuUl3z3Q2lQCprjes7Ub9Ef3VJMagRFEQCwpBEWgR0pIfzy06c7F3uQRIVbV5eqLQGzYGoyzGrIjEFBSRQlYUyIWrSyNHjv+9hP0lQFNV2zdPdfRWswYyRQpiRqKQlTlqM6mTNFUzd/SVR69HgFSNts9Oj+lXWYgUIYiICICQyZlmNJKqUYIS9r793URZxO5YJ6pSEmVkGUkAATFSp2SlP2iwBCU0o2rT5OS4GGghEwJRkDMh4ORHhic/9MO/f3lpfF1YU11/nea9ElI1uqmc7CojRQxSG8hZixBw4mNTf37hjucPGJu7y/C3Y8Xvp46/c/yJTr/4/sbtM21Kh3Y/uOPOua0zfjnfSG2WBUXMioLRpy+6/9kXTJw9IZz6QGd4XnfDlnjl3IUdZaqq3Xj65z/+sTgsrYyyOmWjOqiaVpNaB65eMD47x1OvAijf2qJowy1lqusHnnv83ok39z0CAFKmTlnVcOanrQa/fmPyq5eNhv8ZYHmpkAqXi9l79t62fnrymYXl2sX5vvmlVUuDWt1kRYy6naAbWv+cOip2grro6y1k567ElBrvh537Ds/gILZjIzZiPdZjerzb6YyPd+xJp+248rW1/QVVGeeL3Bx58ljz7v/pCEpK8wRGcAAAAABJRU5ErkJggg==";  
+const PENADD_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABIFBMVEX////kui/epDWYYyBJeC43axk3axk3axm6izvCgjHSnS/bqk83axlZhEBulFg3axk5bBtdh0TLk1PJkE/Kk1A3axlMezFTjChXjy1YQBNZQhJeQhVmjk+Bq2GHuWCHumCLumKMvGWNumSPu2qPvGeTbR6caSWgj0alkUqqYBax05Cx1pKy0pW0diy01JW1fTS21Jy5iSa/kCfBi0jCZxXDmTHHgzTIkE7IqWfJkU/KlULPnErQnVnQ5rrUnF3YpWrZjzvZqFDcxG3dq3Pdrmzhy7Dkui/mtF3omEDsqmHsz6ny4cjy5r7zz2/0z6X01Kf01kT1z6b12Wj13GD327334cn44cX44qj448v47cP548v548z659H67o789LP///9mEfVoAAAAFXRSTlMACRkgfISIjK2u3+ry8vL39/f3/f3+EWHRAAAAnUlEQVR4AWPAAxi5Rcy5mJAEHO1DI6w4EXw3/7Do6BBhBD8y3MXPL0QIwY8L8rVxtkTiBwfEujvg4huh8Q19wHwNPhleFiCX2dDVAsRXl9WzVZZgZ2BQ9Y7RN3WyNhPU0o5XVOEHCkR5epho6jKIGcTHx+uIMjBI2QV6GesyMAgoyMfLgVRISqvpcgDNYhVX0lESZ0fyHBuPKA8bAwARQR9Q8uhEpAAAAABJRU5ErkJggg==";
+const PENDEL_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABL1BMVEX////kui/epDWYYyC6QwS5RQPEVx24RQPDVxq6izvCgjG5RAO5RAO5RQPSnS/ATQ65RQO5RQO5RQPbqk/Lk1PRczjJZCW9TQTLay3JkE/Kk1C8QgRYQBNZQhJeQhWTbR6caSWqYBa0diy1fTS5iSa/kCfBi0jCZxXDmTHHgzTIkE7IqWfJkU/KlULPdS3PnErQnVnUnF3YpWrZjzvZqFDcxG3dZAHdq3PdrmzhaAPhy7Dkui/mdyHmtF3omEDqeQXrikDsqmHsz6nudgDvfxjy4cjy5r7zz2/0nWP0z6X01Kf01kT1qHL1z6b12Wj13GD2tY33tY3327334cn4dgD44cX44qj448v47cP548v548z659H67o789LP+za7+1rj/dxH/fxj/hiH/kk3////jTOc1AAAAHHRSTlMACRkgbXh4eoCtrt3e39/h4uPk6vf5+/z8/f3+3whj2wAAAJ5JREFUeAFjwAMYhaW0+JiQBEyMgsN1uRB8a6/QqKggSQQ/IszC0zNIBMGP9XM3MNdB4vt7x9ga4+KrovFV3MB8PX5pAVYgl1nFShvMFw2M95FgYWCQd41W1jDV1+QOSE5IcuABCkQ62qkrKjFIx6WkpLhIMzDIGvo6qSkxMAh6JIY4WwoxMMjIKShxAs3iELOxNxNnR/IcG6+0IDsDAIv5H4jtkhCxAAAAAElFTkSuQmCC";
+
 /* Icons by Mark James - http://www.famfamfam.com/lab/icons/silk/ - CC BY 2.5 - https://creativecommons.org/licenses/by/2.5/ */
 
 const ROOT = document.getElementById("mesdiscussions");
@@ -279,12 +278,14 @@ class Post {
       if (!this.isQuote) this.note = new Note(this);
     }
   }
+  get customTopic() {
+    return db.exist(this.author) && db.members[this.author][5][TOPIC];
+  }
   refresh() {
-    const [color, note, displayQuote, postBackground, quoteBackground,,] = db.getParameters(this.author);
-    let enabled = db.topicEnabled(this.author);
-    this.button.style.backgroundColor = enabled ? color : "";
-    this.background.style.background = enabled && ((this.isQuote && quoteBackground) || (!this.isQuote && postBackground)) ? color : "";
-    this.button.style.display = enabled && ((this.isQuote && !displayQuote) || !db.config.displayButton) ? "none" : "inline-block";
+    const [color, note, displayQuote, postBackground, quoteBackground] = db.getParameters(this.author);
+    this.button.style.backgroundColor = color;
+    this.background.style.background = ((this.isQuote && quoteBackground) || (!this.isQuote && postBackground)) ? color : "";
+    this.button.style.display = ((this.isQuote && !displayQuote) || !db.config.displayButton) ? "none" : "inline-block";
     if (!this.isQuote) {
       this.note.element.innerHTML = note;
       this.note.input.value = note;
@@ -310,7 +311,7 @@ class Note {
   save() {
     if (this.element.innerHTML != this.input.value) {
       this.element.innerHTML = this.input.value;
-      db.setNote(this.post.author, this.input.value);
+      db.setParameter(this.post.author, 1, this.input.value);
     }
   }
   showInput() {
@@ -341,7 +342,6 @@ class Row {
     this.quote = newSettingCheckBox(this, "Afficher la pastille dans les citations", checkQuoteSettings);
     this.postBackground = newSettingCheckBox(this, "Colorier le fond des messages", checkBackgroundPostSettings);
     this.quoteBackground = newSettingCheckBox(this, "Colorier le fond des citations", checkBackgroundQuoteSettings);
-    this.whiteList = newSettingCheckBox(this, "Utiliser une liste blanche plutôt qu'une noire", checkWhiteListSettings);
     this.tdDelete = this.tr.insertCell();
     this.delete = newImageButton("Supprimer ce membre", DEL_ICON, this.tdDelete, deleteName);
     this.tr.className = "profil";
@@ -354,12 +354,11 @@ class Row {
     this.refresh();
   }
   refresh() {
-    const [, note, displayQuote, postBackground, quoteBackground, whiteList,] = db.getParameters(this.name);
+    const [, note, displayQuote, postBackground, quoteBackground] = db.getParameters(this.name);
     this.note.innerHTML = note;
     this.quote.checked = displayQuote;
     this.postBackground.checked = postBackground;
     this.quoteBackground.checked = quoteBackground;
-    this.whiteList.checked = whiteList;
   }
 }
 
@@ -483,7 +482,7 @@ function newColorCell(row) {
   let cell = row.tr.insertCell();
   cell.className = "ct-color-settings";
   cell.row = row;
-  cell.style.background = db.getColor(row.name);
+  cell.style.background = db.getParameters(row.name)[0];
   cell.onclick = menu.open;
   return cell;
 }
@@ -507,8 +506,10 @@ function newSettingCheckBox(row, title, onClickFunction) {
 let participants = {};
 
 function refreshParticipant(name) {
-  for (const post of participants[name]) {
-    post.refresh();
+  if (participants[name]) {
+    for (const post of participants[name]) {
+      post.refresh();
+    }
   }
 }
 
@@ -534,7 +535,7 @@ db.save = () => {
   GM.setValue("storage", JSON.stringify(newStorage));
 };  
 db.add = name => {
-  db.members[name] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, 0, []];
+  db.members[name] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, {}];
 }
 db.remove = name => {
   delete db.members[name];
@@ -543,33 +544,25 @@ db.remove = name => {
 db.exist = name => db.members[name] != null;
 db.getColor = name => (db.exist(name)) ? db.members[name][0] : "";
 db.getNote = name => (db.exist(name)) ? db.members[name][1] : "";
-db.getParameters =name => (db.exist(name)) ? db.members[name] : ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, 0, []];
-db.setColor = (name, color) => {
-  if (!db.exist(name)) db.add(name);
-  db.members[name][0] = color;
-  db.save();
-}
-db.setNote = (name, note) => {
-  if (!db.exist(name)) db.add(name);
-  db.members[name][1] = note;
-  db.save();
-}
-db.setParameters = (name, parameters) => {
-  if (!db.exist(name)) db.add(name);
-  db.members[name] = parameters;
-  db.save();
-}
-db.topicEnabled = name => { //renvoie true si ce membre est actif sur ce sujet
+db.getParameters =name => {
   if (db.exist(name)) {
-    return db.members[name][5] == db.members[name][6].includes(TOPIC);
+    return (db.members[name][5][TOPIC] && !settings.isOpen) ? db.members[name][5][TOPIC] : db.members[name];
   }
-  return true;
+  return ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, {}];
+}
+db.setParameter = (name, parameter, value) => {
+  if (!db.exist(name)) db.add(name);
+  if (db.members[name][5][TOPIC] && !settings.isOpen) {
+    db.members[name][5][TOPIC][parameter] = value;
+  } else {
+    db.members[name][parameter] = value;
+  }
+  db.save();
 }
 
 /* Mise à jour de la base de données lors d'une mise à jour du script */
 repair(db);
 if (db.repaired) db.save();
-
 /*** Menu contextuel lors du clic sur une pastille ***/
 let menu = {
   container: document.createElement("div"),
@@ -588,7 +581,7 @@ menu.close = () => {
       menu.target.post.note.hideInput();
       menu.target.post.note.save();
     }
-    refreshParticipant(menu.target.post.author);
+    refreshParticipant(menu.name);
   }
 }
 
@@ -598,25 +591,28 @@ menu.open = (event) => {
   menu.container.style.left = (event.clientX) + "px";
   menu.container.style.top = (window.pageYOffset + event.clientY) + "px";
   menu.container.style.display = "block";
+  menu.container.style.backgroundColor = "#fff";
   if (settings.isOpen) {
     menu.name = event.target.row.name;
   } else {
     menu.name = event.target.post.author;
+    if (menu.target.post.customTopic) menu.container.style.backgroundColor = "#ddd";
     if (!menu.target.post.isQuote) menu.target.post.note.showInput();
   }
-  if (menu.isBlackListed()) {
-    menu.goToPage2();
-  } else {
-    menu.goToPage1();
-  }
+  menu.goToPage1();
 }
 
 menu.goToPage1 = () => {
   menu.page2.style.display = "none";
   menu.page1.style.display = "block";
   menu.container.style.width = "72px";
-  closeButton.style.display = (settings.isOpen) ? "block" : "none";
-  settingButton.style.display = (settings.isOpen) ? "none" : "block";
+  if (settings.isOpen) {
+    closeButton.style.display =  "block";
+    settingButton.style.display = "none";
+  } else {
+    closeButton.style.display = "none";
+    settingButton.style.display =  "block";
+  }
 }
 
 menu.goToPage2 = () => {
@@ -627,48 +623,36 @@ menu.goToPage2 = () => {
 }
 
 menu.page2.refresh = () => {
-  const [, , displayQuote, postBackground, quoteBackground, whiteList, topicList] = db.getParameters(menu.target.post.author);
+  const [, , displayQuote, postBackground, quoteBackground] = db.getParameters(menu.name);
   quote.checked = displayQuote;
   backgroundPost.checked = postBackground;
   backgroundQuote.checked = quoteBackground;
-  whiteListCb.checked = whiteList;
-  if (menu.isBlackListed()) {
-    quote.disabled = true;
-    backgroundPost.disabled = true;
-    backgroundQuote.disabled = true;
-    returnImage.style.opacity = 0.35;
-    returnImage.onclick = null;
-    if (whiteList) {
-      listImage.src = WLADD_ICON;
-      listImage.title = "Ajouter ce sujet à la liste blanche";
-    } else {
-      listImage.src = BLDEL_ICON;
-      listImage.title = "Retirer ce sujet de la liste noire";
-    }
+  if (menu.target.post.customTopic) {
+    menu.container.style.backgroundColor = "#ddd";
+    customTopicImage.onclick = deleteCustomTopic;
+    customTopicImage.src = PENDEL_ICON;
+    customTopicImage.title = "Supprimer la personnalisation spéficique pour ce sujet";
   } else {
-    quote.disabled = false;
-    backgroundPost.disabled = false;
-    backgroundQuote.disabled = false;
-    returnImage.style.opacity = 1;
-    returnImage.onclick = menu.goToPage1;
-    if (whiteList) {
-      listImage.src = WLDEL_ICON;
-      listImage.title = "Retirer ce sujet de la liste blanche";
-    } else {
-      listImage.src = BLADD_ICON;
-      listImage.title = "Ajouter ce sujet à la liste noire";
-    }
+    menu.container.style.backgroundColor = "#fff";
+    customTopicImage.onclick = addCustomTopic;
+    customTopicImage.src = PENADD_ICON;
+    customTopicImage.title = "Utiliser une personnalisation spéficique pour ce sujet";
+  }
+  if (db.exist(menu.name)) {
+    deleteImage.onclick = deleteParticipant;
+    deleteImage.style.opacity = 1;
+  } else {
+    deleteImage.onclick = null;
+    deleteImage.style.opacity = 0.35;
   }
 }
-
-menu.isBlackListed = () => (settings.isOpen) ? false : !db.topicEnabled(menu.name);
 
 /* Éléments de la page 1 du menu contextuel */
 let colorPicker = document.createElement("input");
 colorPicker.type = "color";
 
 colorPicker.onchange = function() {
-  db.setColor(menu.name, this.value);
+  db.setParameter(menu.name, 0, this.value);
   if (settings.isOpen) {
     menu.target.row.color.td.style.background = this.value;
   } else {
@@ -677,7 +661,7 @@ colorPicker.onchange = function() {
 };
 
 colorPicker.open = () => {
-  colorPicker.value = db.getColor(menu.name);
+  colorPicker.value = db.getParameters(menu.name)[0];
   colorPicker.click();
   menu.close();
 }
@@ -696,37 +680,39 @@ transparentBox.id = "ct-transparent";
 transparentBox.title = "Transparent";
 
 function setColor() {
-  db.setColor(menu.name, rgbToHex(this.style.backgroundColor));
+  db.setParameter(menu.name, 0, rgbToHex(this.style.backgroundColor));
   if (settings.isOpen) menu.target.row.color.style.background = this.style.backgroundColor;
   menu.close();
 }
 
 /* Eléments de la page 2 du menu contextuel */
-let returnImage = newImageButton("Revenir au choix de la couleur", UNDO_ICON, menu.page2, menu.goToPage1);
+newImageButton("Revenir au choix de la couleur", UNDO_ICON, menu.page2, menu.goToPage1);
 newImageButton("Ouvrir les paramètres du script", COG_ICON, menu.page2, openSettings);
-let listImage = newImageButton("", "", menu.page2, toggleList);
-newImageButton("Supprimer ce membre de la base de données", DEL_ICON, menu.page2, deleteParticipant);
+let customTopicImage = newImageButton("", "", menu.page2, null);
+let deleteImage = newImageButton("Supprimer ce membre de la base de données", DEL_ICON, menu.page2, null);
 newImageButton("Fermer", CROSS_ICON, menu.page2, menu.close);
 let quote = newCheckBox("Afficher la pastille dans les citations", "citation", checkQuote);
 let backgroundPost = newCheckBox("Colorier le fond des messages", "fond message", checkBackgroundPost);
 let backgroundQuote = newCheckBox("Colorier le fond des citations", "fond citation", checkBackgroundQuote);
-let whiteListCb = newCheckBox("Utiliser une liste blanche plutôt qu'une noire", "liste blanche", checkWhiteList);
 
-function toggleList() {
-  let parameters = db.getParameters(menu.target.post.author);
-  let index = parameters[6].indexOf(TOPIC);
-  if (index == -1) {
-    parameters[6].push(TOPIC);
-  } else {
-    parameters[6].splice(index,1);
-  }
-  db.setParameters(menu.target.post.author, parameters);
+function addCustomTopic() {
+  if (!db.exist(menu.name)) db.add(menu.name);
+  let parameters = db.getParameters(menu.name)
+  db.members[menu.name][5][TOPIC] = parameters.slice(0,5);
+  db.save();
   menu.page2.refresh();
-  refreshParticipant(menu.target.post.author);
-}  
+  refreshParticipant(menu.name);
+}
+
+function deleteCustomTopic() {
+  delete db.members[menu.name][5][TOPIC];
+  db.save();
+  menu.page2.refresh();
+  refreshParticipant(menu.name);
+}
 
 function deleteParticipant() {
-  db.remove(menu.target.post.author);
+  db.remove(menu.name);
   menu.close();
 }
 
@@ -741,17 +727,11 @@ function checkBackgroundPost() {
 function checkBackgroundQuote() {
   checkParameter(this, 4)
 }
-  
-function checkWhiteList() {
-  checkParameter(this, 5);
-  menu.page2.refresh();
-}
 
-function checkParameter(checkbox, index) {
-  let parameters = db.getParameters(menu.target.post.author);
-  parameters[index] = (checkbox.checked) ? 1 : 0;
-  db.setParameters(menu.target.post.author, parameters);
-  refreshParticipant(menu.target.post.author);
+function checkParameter(checkbox, parameter) {
+  db.setParameter(menu.name, parameter, (checkbox.checked) ? 1 : 0);
+  refreshParticipant(menu.name);
+  menu.page2.refresh();
 }
   
 /* Cache le menu lors d'un clic extérieur */
@@ -836,7 +816,7 @@ let members = document.createElement("table");
 members.className = "main ct-table";
 members.id = "ct-members";
 
-newHeaderRow(members, "Liste des membres", 8);
+newHeaderRow(members, "Liste des membres", 7);
 
 members.initialize = () => {
   for (const name in db.members) {
@@ -864,12 +844,12 @@ inputFieldSettings.attach = function() {
   inputFieldSettings.style.display = "block";
   inputFieldSettings.row = this.row;
   inputFieldSettings.row.note.innerHTML = "";
-  inputFieldSettings.value = db.getNote(inputFieldSettings.row.name);
+  inputFieldSettings.value = db.getParameters(inputFieldSettings.row.name)[1];
   inputFieldSettings.row.note.appendChild(inputFieldSettings);
   inputFieldSettings.focus();
 }
 inputFieldSettings.save = () => {
-  db.setNote(inputFieldSettings.row.name, inputFieldSettings.value)
+  db.setParameter(inputFieldSettings.row.name, 1, inputFieldSettings.value)
   inputFieldSettings.row.note.innerHTML = inputFieldSettings.value;
   inputFieldSettings.style.display = "none";
 }
@@ -941,6 +921,7 @@ function importData() {
 
 /* Vérifier si tous les paramètres sont présents, les créer dans le cas contraire */
 function repair(importedDB) {
+  let hasNoVersion = !importedDB.version;
   importedDB.repaired = false;
   for (const key in DEFAULTSTORAGE) {
     if (typeof importedDB[key] == "undefined") {
@@ -954,11 +935,28 @@ function repair(importedDB) {
       importedDB.repaired = true;
     }
   }
-  if (importedDB.version < "2.2.0") {
+  if (hasNoVersion || importedDB.version < "2.1.1") {
     for (const name in importedDB.members) {
-      if (importedDB.members[name].length < 7) importedDB.members[name] = [...importedDB.members[name],0,[]];
+      if (importedDB.members[name].length < 6) importedDB.members[name] = [...importedDB.members[name],{}];
       importedDB.repaired = true;
     }
+  } else if (importedDB.version < "2.3.0") {
+    for (const name in importedDB.members) {
+      importedDB.members[name].push({});
+      for (const topic of importedDB.members[name][6]) {
+        if (importedDB.members[name][5]) {
+          importedDB.members[name][7][topic] = importedDB.members[name].slice(0,4);
+        } else {
+          importedDB.members[name][7][topic] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground];
+        }
+      }
+      if (importedDB.members[name][5]) {
+        importedDB.members[name] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, importedDB.members[name][7]];
+      } else {
+        importedDB.members[name].splice(5,2);
+      }
+      importedDB.repaired = true;
+    }  
   }
 }
 
@@ -977,9 +975,7 @@ function checkCoherence(importedDB) {
     for (const name in importedDB.members) {
       isOK &= (name == name.toLowerCase()) &&
         (importedDB.members[name][0] == "" || /#[\da-f]{6}/i.test(importedDB.members[name][0])) &&
-        importedDB.members[name][2] < 2 &&
-        importedDB.members[name][3] < 2 &&
-        importedDB.members[name][4] < 2;
+        importedDB.members[name].length == 6;
     }
     if (!isOK) throw "liste des membres non valide.";
   } catch (err) {
@@ -1059,14 +1055,8 @@ function checkBackgroundQuoteSettings() {
   checkParameterSettings(this, 4)
 }
 
-function checkWhiteListSettings() {
-  checkParameterSettings(this, 5)
-}
-
-function checkParameterSettings(checkbox, index) {
-  parameters = db.getParameters(checkbox.row.name);
-  parameters[index] = (checkbox.checked) ? 1 : 0;
-  db.setParameters(checkbox.row.name, parameters);
+function checkParameterSettings(checkbox, parameter) {
+  db.setParameter(checkbox.row.name, parameter, (checkbox.checked) ? 1 : 0);
   checkbox.row.refresh();
   refreshParticipant(checkbox.row.name);
 }

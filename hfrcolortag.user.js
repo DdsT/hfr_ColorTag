@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   ddst.github.io
-// @version     2.3.0
+// @version     2.3.1
 // @author      DdsT
 // @downloadURL https://ddst.github.io/hfr_ColorTag/hfrcolortag.user.js
 // @updateURL   https://ddst.github.io/hfr_ColorTag/hfrcolortag.meta.js
@@ -241,7 +241,9 @@ const PENDEL_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAA
 /* Icons by Mark James - http://www.famfamfam.com/lab/icons/silk/ - CC BY 2.5 - https://creativecommons.org/licenses/by/2.5/ */
 
 const ROOT = document.getElementById("mesdiscussions");
-const TOPIC = `${document.hop.querySelector("input[name='cat']").value}&${document.hop.querySelector("input[name='subcat']").value}&${document.hop.querySelector("input[name='post']").value}`;
+const RESPONSE_URL = document.querySelector(".message a[href^='/message.php']");
+const TOPIC = RESPONSE_URL ? RESPONSE_URL.href.replace(/.*cat=(\d+).*post=(\d+).*/g,"$1&$2") : "";
+        
 const DEFAULTSTORAGE = {
   version: VERSION,
   members: {},
@@ -944,10 +946,11 @@ function repair(importedDB) {
     for (const name in importedDB.members) {
       importedDB.members[name].push({});
       for (const topic of importedDB.members[name][6]) {
+        let newtopic = topic.replace(/(\d+)&\d+(&\d+)/g,"$1$2");
         if (importedDB.members[name][5]) {
-          importedDB.members[name][7][topic] = importedDB.members[name].slice(0,4);
+          importedDB.members[name][7][newtopic] = importedDB.members[name].slice(0,4);
         } else {
-          importedDB.members[name][7][topic] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground];
+          importedDB.members[name][7][newtopic] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground];
         }
       }
       if (importedDB.members[name][5]) {
@@ -957,6 +960,15 @@ function repair(importedDB) {
       }
       importedDB.repaired = true;
     }  
+  } else if (importedDB.version < "2.3.1") {
+    for (const name in importedDB.members) {
+      for (const topic in importedDB.members[name][5]) {
+        let newtopic = topic.replace(/(\d+)&\d+(&\d+)/g,"$1$2");
+        importedDB.members[name][5][newtopic] = importedDB.members[name][5][topic];
+        delete importedDB.members[name][5][topic];
+      }
+    }  
+    importedDB.repaired = true;
   }
 }
 

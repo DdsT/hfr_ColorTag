@@ -1,6 +1,10 @@
 
 # Historique
 
+## v2.3.1 (2018-12-20)
+
+- Correction d'un bug lors de la récupération du nom du topic (topic verrouillé, réponse rapide indisponible...)
+
 ## v2.3.0 (2018-12-19)
 
 - Transformation de la fonctionnalité liste noire / liste blanche en une fonction de personnalisation spécifique par sujet

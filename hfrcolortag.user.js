@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   ddst.github.io
-// @version     2.3.1
+// @version     2.3.2
 // @author      DdsT
 // @downloadURL https://ddst.github.io/hfr_ColorTag/hfrcolortag.user.js
 // @updateURL   https://ddst.github.io/hfr_ColorTag/hfrcolortag.meta.js
+// @supportURL  https://ddst.github.io/hfr_ColorTag/
 // @description Colorier et Annoter les messages en fonction du pseudo
 // @icon        https://www.hardware.fr/images_skin_2010/facebook/logo.png
 // @match       *://forum.hardware.fr/forum2.php*
@@ -18,7 +19,7 @@
 // ==/UserScript==
 
 /*
-Copyright (C) 2018 DdsT
+Copyright (C) 2020 DdsT
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
@@ -34,7 +35,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see https://ddst.github.io/hfr_ColorTag/LICENSE.
 */
 
-(async () => { //le script s'exécute de manière asynchrone pour récupérer les données via GM.getValue
+/* v2.3.2
+ * ------
+ * Amélioration de la compatibilité avec [HFR] Chat v1.0.2
+ * Refonte du code pour un démarrage plus rapide
+ * Amélioration de l'affichage de la page de configuration pour certains navigateurs
+ */
 
 const STYLE = `
 .ct-button {
@@ -167,18 +173,25 @@ const STYLE = `
   opacity          : 0;
   transition       : opacity 0.7s ease 0s;
 }
+
+#ct-settings-container {
+    position    : fixed;
+    left        : 0;
+    right       : 0;
+    top         : 0;
+    bottom      : 0;
+    z-index     : 1002;
+    display     : none;
+}
+
 #ct-settings {
   box-shadow  : 0 4px  8px 0 rgba(0, 0, 0, 0.2),
                 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  position    : fixed;
-  width       : 700px;
+  position    : static;
   background  : white;
-  z-index     : 1002;
-  display     : none;
+  display     : block;
   opacity     : 0;
-  left        : 50%;
-  top         : 50%;
-  transform   : translate(-50%, -50%);
+  margin      : auto auto;
   transition  : opacity 0.7s ease 0s;
   padding     : 0 16px 16px 16px;
 }
@@ -199,21 +212,26 @@ const STYLE = `
   float   : left;
   cursor  : pointer;
 }
+
 .ct-submit {
   width  : 135px;
   margin : 10px 2px 10px 2px;
 }
+
 .ct-member-container {
   overflow : auto;
 }
+
 .ct-color-settings {
   cursor : pointer;
   width  : 20px;
 }
+
 .ct-note-settings {
   cursor     : text;
   font-style : italic;
 }
+
 .ct-input-settings {
   border       : 0;
   font-family  : Verdana, Arial, sans-serif, Helvetica;
@@ -223,8 +241,17 @@ const STYLE = `
   padding-left : 0;
   padding-top  : 2px;
 }
+
 .ct-checkbox-cell {
   width : 20px;
+}
+
+.ct-show {
+  display : block;
+}
+
+.ct-hide {
+  display : none;
 }
 `;
 
@@ -257,7 +284,58 @@ const DEFAULTSTORAGE = {
   }
 };
 const DEFAULTSTRING = JSON.stringify(DEFAULTSTORAGE);
-const STORAGE = await GM.getValue("storage", DEFAULTSTRING);
+
+let db;                // Base de données contenant la configuration, les membres et leurs données
+let participants = {}; // Liste des participants de la page avec leurs interventions
+let menu;              // Menu contextuel lors du clic sur une pastille
+let settings;          // Page de configuration du script
+
+/* Créer la base de données */
+function createDB(json) {
+  db = JSON.parse(json);
+  db.save = () => {
+    let sortedMembers = {};
+    for (const key of Object.keys(db.members).sort()) {
+      sortedMembers[key] = db.members[key];
+    }
+    db.members = sortedMembers;
+    const newStorage = {
+      version: VERSION,
+      members: db.members,
+      config: db.config,
+    };
+    GM.setValue("storage", JSON.stringify(newStorage));
+  };  
+  db.add = name => {
+    db.members[name] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, {}];
+  }
+  db.remove = name => {
+    delete db.members[name];
+    db.save();
+  }
+  db.exist = name => db.members[name] != null;
+  db.getColor = name => (db.exist(name)) ? db.members[name][0] : "";
+  db.getNote = name => (db.exist(name)) ? db.members[name][1] : "";
+  db.getParameters =name => {
+    if (db.exist(name)) {
+      return (db.members[name][5][TOPIC] && !settings.isOpen) ? db.members[name][5][TOPIC] : db.members[name];
+    }
+    return ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, {}];
+  }
+  db.setParameter = (name, parameter, value) => {
+    if (!db.exist(name)) db.add(name);
+    if (db.members[name][5][TOPIC] && !settings.isOpen) {
+      db.members[name][5][TOPIC][parameter] = value;
+    } else {
+      db.members[name][parameter] = value;
+    }
+    db.save();
+  }
+  
+  /* Mise à jour de la base de données lors d'une mise à jour du script */
+  repair(db);
+  if (db.repaired) db.save();
+}
 
 /* un Post décrit une intervention d'un participant de la page (dans une citation ou bien dans un message complet) */
 class Post {
@@ -265,11 +343,11 @@ class Post {
     this.element = element;
     this.isQuote = !element.classList.contains("s2");
     if (this.isQuote) {
-      this.author = element.innerHTML.substr(0, (element.innerHTML.length - " a écrit :".length));
-      this.background = element.parentNode.parentNode.parentNode.parentNode.parentNode;
+      this.author = element.textContent.replace(/ a écrit :/g,"");
+      this.background = element.closest(".citation, .oldcitation");
     } else {
-      this.author = element.innerHTML;
-      this.background = element.parentNode.parentNode.parentNode;
+      this.author = element.textContent;
+      this.background = element.closest(".message");
     }
     this.author = this.author.replace(/\u200b/g, "").toLowerCase();
     this.noAuthor = this.author == "profil supprimé";
@@ -299,16 +377,18 @@ class Post {
 class Note {
   constructor(post) {
     this.post = post;
-    this.element = document.createElement("div");
+    this.element = document.createElement("span");
     this.element.className = "ct-note";
     this.input = document.createElement("input");
-    this.input.className = "ct-input";
-    this.input.style.display = "none";
+    this.input.className = "ct-input ct-hide";
     this.input.onkeyup = function(event) {
       if (event.keyCode == 13) menu.close();
     };
-    post.element.parentNode.appendChild(this.input);
-    post.element.parentNode.appendChild(this.element);
+    let container = document.createElement("div");
+    container.className = "ct-note-container";
+    container.appendChild(this.input);
+    container.appendChild(this.element);
+    post.element.parentNode.appendChild(container);
   }
   save() {
     if (this.element.innerHTML != this.input.value) {
@@ -317,12 +397,12 @@ class Note {
     }
   }
   showInput() {
-    this.element.style.display = "none";
-    this.input.style.display = "block";
+    this.element.classList.add("ct-hide");
+    this.input.classList.remove("ct-hide");
   }
   hideInput() {
-    this.element.style.display = "block";
-    this.input.style.display = "none";
+    this.element.classList.remove("ct-hide");
+    this.input.classList.add("ct-hide");
   }
 }
 
@@ -351,7 +431,7 @@ class Row {
     this.tdDelete.className = "ct-checkbox-cell";
     this.delete.row = this;
     this.note.row = this;
-    this.note.onclick = inputFieldSettings.attach;
+    this.note.onclick = settings.inputFieldSettings.attach;
     this.note.className = "ct-note-settings";
     this.refresh();
   }
@@ -363,6 +443,7 @@ class Row {
     this.quoteBackground.checked = quoteBackground;
   }
 }
+
 
 /* Pastille à côté du pseudo permettant de faire apparaître le menu contextuel */
 function newButton(post) {
@@ -502,10 +583,6 @@ function newSettingCheckBox(row, title, onClickFunction) {
   return checkbox;
 }
 
-/*** Création des objets et définition de leurs fonctions associées ***/
-
-/* Liste des participants de la page avec leurs interventions */
-let participants = {};
 
 function refreshParticipant(name) {
   if (participants[name]) {
@@ -521,181 +598,148 @@ function refreshParticipants() {
   }
 }
 
-/* Base de données contenant la configuration, les membres et leurs données */
-let db = JSON.parse(STORAGE);
-db.save = () => {
-  let sortedMembers = {};
-  for (const key of Object.keys(db.members).sort()) {
-    sortedMembers[key] = db.members[key];
-  }
-  db.members = sortedMembers;
-  const newStorage = {
-    version: VERSION,
-    members: db.members,
-    config: db.config,
+function createMenu() {
+  menu = {
+    container: document.createElement("div"),
+    page1: document.createElement("div"),
+    page2: document.createElement("div"),
   };
-  GM.setValue("storage", JSON.stringify(newStorage));
-};  
-db.add = name => {
-  db.members[name] = ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, {}];
-}
-db.remove = name => {
-  delete db.members[name];
-  db.save();
-}
-db.exist = name => db.members[name] != null;
-db.getColor = name => (db.exist(name)) ? db.members[name][0] : "";
-db.getNote = name => (db.exist(name)) ? db.members[name][1] : "";
-db.getParameters =name => {
-  if (db.exist(name)) {
-    return (db.members[name][5][TOPIC] && !settings.isOpen) ? db.members[name][5][TOPIC] : db.members[name];
-  }
-  return ["", "", db.config.displayQuote, db.config.postBackground, db.config.quoteBackground, {}];
-}
-db.setParameter = (name, parameter, value) => {
-  if (!db.exist(name)) db.add(name);
-  if (db.members[name][5][TOPIC] && !settings.isOpen) {
-    db.members[name][5][TOPIC][parameter] = value;
-  } else {
-    db.members[name][parameter] = value;
-  }
-  db.save();
-}
-
-/* Mise à jour de la base de données lors d'une mise à jour du script */
-repair(db);
-if (db.repaired) db.save();
-/*** Menu contextuel lors du clic sur une pastille ***/
-let menu = {
-  container: document.createElement("div"),
-  page1: document.createElement("div"),
-  page2: document.createElement("div"),
-};
-menu.container.id = "ct-menu";
-menu.container.appendChild(menu.page1);
-menu.container.appendChild(menu.page2);
-ROOT.appendChild(menu.container);
-
-menu.close = () => {
-  menu.container.style.display = "none";
-  if (typeof menu.target != "undefined" && typeof menu.target.post != "undefined") {
-    if (!menu.target.post.isQuote) {
-      menu.target.post.note.hideInput();
-      menu.target.post.note.save();
+  menu.container.id = "ct-menu";
+  menu.container.appendChild(menu.page1);
+  menu.container.appendChild(menu.page2);
+  ROOT.appendChild(menu.container);
+  
+  menu.close = () => {
+    menu.container.style.display = "none";
+    if (typeof menu.target != "undefined" && typeof menu.target.post != "undefined") {
+      if (!menu.target.post.isQuote) {
+        menu.target.post.note.hideInput();
+        menu.target.post.note.save();
+      }
+      refreshParticipant(menu.name);
     }
-    refreshParticipant(menu.name);
   }
-}
-
-menu.open = (event) => {
-  menu.close();
-  menu.target = event.target;
-  menu.container.style.left = (event.clientX) + "px";
-  menu.container.style.top = (window.pageYOffset + event.clientY) + "px";
-  menu.container.style.display = "block";
-  menu.container.style.backgroundColor = "#fff";
-  if (settings.isOpen) {
-    menu.name = event.target.row.name;
-  } else {
-    menu.name = event.target.post.author;
-    if (menu.target.post.customTopic) menu.container.style.backgroundColor = "#ddd";
-    if (!menu.target.post.isQuote) menu.target.post.note.showInput();
-  }
-  menu.goToPage1();
-}
-
-menu.goToPage1 = () => {
-  menu.page2.style.display = "none";
-  menu.page1.style.display = "block";
-  menu.container.style.width = "72px";
-  if (settings.isOpen) {
-    closeButton.style.display =  "block";
-    settingButton.style.display = "none";
-  } else {
-    closeButton.style.display = "none";
-    settingButton.style.display =  "block";
-  }
-}
-
-menu.goToPage2 = () => {
-  menu.page2.refresh();
-  menu.container.style.width = "90px";
-  menu.page1.style.display = "none";
-  menu.page2.style.display = "block";
-}
-
-menu.page2.refresh = () => {
-  const [, , displayQuote, postBackground, quoteBackground] = db.getParameters(menu.name);
-  quote.checked = displayQuote;
-  backgroundPost.checked = postBackground;
-  backgroundQuote.checked = quoteBackground;
-  if (menu.target.post.customTopic) {
-    menu.container.style.backgroundColor = "#ddd";
-    customTopicImage.onclick = deleteCustomTopic;
-    customTopicImage.src = PENDEL_ICON;
-    customTopicImage.title = "Supprimer la personnalisation spéficique pour ce sujet";
-  } else {
+  
+  menu.open = (event) => {
+    menu.close();
+    menu.target = event.target;
+    menu.container.style.left = (event.clientX) + "px";
+    menu.container.style.top = (window.pageYOffset + event.clientY) + "px";
+    menu.container.style.display = "block";
     menu.container.style.backgroundColor = "#fff";
-    customTopicImage.onclick = addCustomTopic;
-    customTopicImage.src = PENADD_ICON;
-    customTopicImage.title = "Utiliser une personnalisation spéficique pour ce sujet";
+    if (settings.isOpen) {
+      menu.name = event.target.row.name;
+    } else {
+      menu.name = event.target.post.author;
+      if (menu.target.post.customTopic) menu.container.style.backgroundColor = "#ddd";
+      if (!menu.target.post.isQuote) menu.target.post.note.showInput();
+    }
+    menu.goToPage1();
   }
-  if (db.exist(menu.name)) {
-    deleteImage.onclick = deleteParticipant;
-    deleteImage.style.opacity = 1;
-  } else {
-    deleteImage.onclick = null;
-    deleteImage.style.opacity = 0.35;
+  
+  menu.goToPage1 = () => {
+    menu.page2.style.display = "none";
+    menu.page1.style.display = "block";
+    menu.container.style.width = "72px";
+    if (settings.isOpen) {
+      closeButton.style.display =  "block";
+      settingButton.style.display = "none";
+    } else {
+      closeButton.style.display = "none";
+      settingButton.style.display =  "block";
+    }
   }
-}
-
-/* Éléments de la page 1 du menu contextuel */
-let colorPicker = document.createElement("input");
-colorPicker.type = "color";
-
-colorPicker.onchange = function() {
-  db.setParameter(menu.name, 0, this.value);
-  if (settings.isOpen) {
-    menu.target.row.color.td.style.background = this.value;
-  } else {
-    refreshParticipant(menu.name);
+  
+  menu.goToPage2 = () => {
+    menu.page2.refresh();
+    menu.container.style.width = "90px";
+    menu.page1.style.display = "none";
+    menu.page2.style.display = "block";
   }
-};
-
-colorPicker.open = () => {
-  colorPicker.value = db.getParameters(menu.name)[0];
-  colorPicker.click();
-  menu.close();
+  
+  menu.page2.refresh = () => {
+    const [, , displayQuote, postBackground, quoteBackground] = db.getParameters(menu.name);
+    quote.checked = displayQuote;
+    backgroundPost.checked = postBackground;
+    backgroundQuote.checked = quoteBackground;
+    if (menu.target.post.customTopic) {
+      menu.container.style.backgroundColor = "#ddd";
+      customTopicImage.onclick = deleteCustomTopic;
+      customTopicImage.src = PENDEL_ICON;
+      customTopicImage.title = "Supprimer la personnalisation spéficique pour ce sujet";
+    } else {
+      menu.container.style.backgroundColor = "#fff";
+      customTopicImage.onclick = addCustomTopic;
+      customTopicImage.src = PENADD_ICON;
+      customTopicImage.title = "Utiliser une personnalisation spéficique pour ce sujet";
+    }
+    if (db.exist(menu.name)) {
+      deleteImage.onclick = deleteParticipant;
+      deleteImage.style.opacity = 1;
+    } else {
+      deleteImage.onclick = null;
+      deleteImage.style.opacity = 0.35;
+    }
+  }
+  
+  /* Éléments de la page 1 du menu contextuel */
+  let colorPicker = document.createElement("input");
+  colorPicker.type = "color";
+  
+  colorPicker.onchange = function() {
+    db.setParameter(menu.name, 0, this.value);
+    if (settings.isOpen) {
+      menu.target.row.color.td.style.background = this.value;
+    } else {
+      refreshParticipant(menu.name);
+    }
+  };
+  
+  colorPicker.open = () => {
+    colorPicker.value = db.getParameters(menu.name)[0];
+    colorPicker.click();
+    menu.close();
+  }
+  
+  let closeButton = newImageButton("Fermer", CROSS_ICON, menu.page1, menu.close);
+  let settingButton = newImageButton("Paramètres d'affichage", EDIT_ICON, menu.page1, menu.goToPage2);
+  let rainbowBox = newBox("", -1, menu.page1, colorPicker.open);
+  let transparentBox = newBox("", -1, menu.page1, setColor);
+  for (const i in db.config.palette) {
+    newBox(db.config.palette[i], i, menu.page1, setColor);
+  }
+  
+  rainbowBox.className = "ct-box ct-rainbow";
+  rainbowBox.title = "Choisir une couleur spécifique";
+  transparentBox.id = "ct-transparent";
+  transparentBox.title = "Transparent";
+  
+  /* Eléments de la page 2 du menu contextuel */
+  newImageButton("Revenir au choix de la couleur", UNDO_ICON, menu.page2, menu.goToPage1);
+  newImageButton("Ouvrir les paramètres du script", COG_ICON, menu.page2, openSettings);
+  let customTopicImage = newImageButton("", "", menu.page2, null);
+  let deleteImage = newImageButton("Supprimer ce membre de la base de données", DEL_ICON, menu.page2, null);
+  newImageButton("Fermer", CROSS_ICON, menu.page2, menu.close);
+  let quote = newCheckBox("Afficher la pastille dans les citations", "citation", checkQuote);
+  let backgroundPost = newCheckBox("Colorier le fond des messages", "fond message", checkBackgroundPost);
+  let backgroundQuote = newCheckBox("Colorier le fond des citations", "fond citation", checkBackgroundQuote);
+  
+  /* Cache le menu lors d'un clic extérieur */
+  document.addEventListener("click", (event) => {
+  const targetClass = event.target.classList[0];
+  if (targetClass != "ct-button" &&
+    targetClass != "ct-color-settings" &&
+    targetClass != "ct-input" &&
+    !event.target.closest("#ct-menu"))
+    menu.close();
+  });
 }
-
-let closeButton = newImageButton("Fermer", CROSS_ICON, menu.page1, menu.close);
-let settingButton = newImageButton("Paramètres d'affichage", EDIT_ICON, menu.page1, menu.goToPage2);
-let rainbowBox = newBox("", -1, menu.page1, colorPicker.open);
-let transparentBox = newBox("", -1, menu.page1, setColor);
-for (const i in db.config.palette) {
-  newBox(db.config.palette[i], i, menu.page1, setColor);
-}
-
-rainbowBox.className = "ct-box ct-rainbow";
-rainbowBox.title = "Choisir une couleur spécifique";
-transparentBox.id = "ct-transparent";
-transparentBox.title = "Transparent";
 
 function setColor() {
   db.setParameter(menu.name, 0, rgbToHex(this.style.backgroundColor));
   if (settings.isOpen) menu.target.row.color.style.background = this.style.backgroundColor;
   menu.close();
 }
-
-/* Eléments de la page 2 du menu contextuel */
-newImageButton("Revenir au choix de la couleur", UNDO_ICON, menu.page2, menu.goToPage1);
-newImageButton("Ouvrir les paramètres du script", COG_ICON, menu.page2, openSettings);
-let customTopicImage = newImageButton("", "", menu.page2, null);
-let deleteImage = newImageButton("Supprimer ce membre de la base de données", DEL_ICON, menu.page2, null);
-newImageButton("Fermer", CROSS_ICON, menu.page2, menu.close);
-let quote = newCheckBox("Afficher la pastille dans les citations", "citation", checkQuote);
-let backgroundPost = newCheckBox("Colorier le fond des messages", "fond message", checkBackgroundPost);
-let backgroundQuote = newCheckBox("Colorier le fond des citations", "fond citation", checkBackgroundQuote);
 
 function addCustomTopic() {
   if (!db.exist(menu.name)) db.add(menu.name);
@@ -735,155 +779,132 @@ function checkParameter(checkbox, parameter) {
   refreshParticipant(menu.name);
   menu.page2.refresh();
 }
-  
-/* Cache le menu lors d'un clic extérieur */
-document.addEventListener("click", (event) => {
-  const targetClass = event.target.classList[0];
-  if (targetClass != "ct-button" &&
-    targetClass != "ct-color-settings" &&
-    targetClass != "ct-input" &&
-    !event.target.closest("#ct-menu"))
-    menu.close();
-});
-
-/* Observateur pour gérer les messages ajoutés dynamiquement */
-let postObserver = new MutationObserver(mutations => {
-  for (const mutation of mutations) {
-    for (const message of mutation.addedNodes) {
-      colorTag(message);
-    }
-  }
-});
-
-function toggleObserver() {
-  if (db.config.observeNewPost) {
-    postObserver.observe(ROOT, {
-      childList: true
-    });
-  } else {
-    postObserver.disconnect();
-  }
-}
 
 /* Page de configuration du script */
-let settings = document.createElement("div");
-settings.id = "ct-settings";
-let background = document.createElement("div");
-background.id = "ct-background";
-background.onclick = hideSettings;
-background.addEventListener("transitionend", endTranstion, false);
-window.addEventListener("resize", () => {
-  background.style.width = "100%"
-  members.updateHeight();
-});
-ROOT.appendChild(background);
-ROOT.appendChild(settings);
-
-let title = document.createElement("div");
-title.innerHTML = '<h4 class="Ext">Configuration du script [HFR] Color Tag</h4>';
-settings.appendChild(title);
-
-/* Tableau des paramètres configuration */
-let parameters = document.createElement("table");
-parameters.className = "main ct-table";
-settings.appendChild(parameters);
-
-newHeaderRow(parameters, "Paramètres d'affichage par défaut", 2);
-let cbButton = newParameter(parameters, "Afficher les pastilles");
-let cbQuote = newParameter(parameters, "Afficher la pastille à côté du pseudo dans les citations");
-let cbBackgroundPost = newParameter(parameters, "Colorier le fond des messages");
-let cbBackgroundQuote = newParameter(parameters, "Colorier le fond des citations");
-let cbObserveNewPost = newParameter(parameters, "Traiter les messages ajoutés via d'autres scripts");
-newHeaderRow(parameters, "Palette de couleur", 2);
-newColorRow(parameters, 2);
-
-cbButton.onclick = () => {
-  if (db.config.displayButton && !cbButton.checked)
-    alert("Pour accéder à cette page de configuration sans les pastilles, utiliser les commandes de script depuis le menu de l'extension.\nSi celui-ci est indisponible (par exemple avec Grease Monkey 4), faire un clic droit dans un topic et sélectionner « Paramètres HFR Color Tag ».");
-}
-
-let buttonContainer = document.createElement("div");
-newSubmit("Importer", buttonContainer, importData);
-newSubmit("Exporter", buttonContainer, exportData);
-newSubmit("Valeurs par défaut", buttonContainer, defaultSettings);
-newSubmit("Annuler", buttonContainer, hideSettings);
-newSubmit("Valider", buttonContainer, applySettings);
-settings.appendChild(buttonContainer);
-
-/* Tableau des membres */
-let memberContainer = document.createElement("div");
-memberContainer.className = "ct-member-container";
-
-let members = document.createElement("table");
-members.className = "main ct-table";
-members.id = "ct-members";
-
-newHeaderRow(members, "Liste des membres", 7);
-
-members.initialize = () => {
-  for (const name in db.members) {
-    let row = new Row(members, name);
+function createSettings() {
+  settings = document.createElement("div");
+  settings.id = "ct-settings";
+  settings.background = document.createElement("div");
+  settings.background.id = "ct-background";
+  settings.background.addEventListener("transitionend", endTranstion, false);
+  window.addEventListener("resize", () => {
+    settings.background.style.width = "100%"
+    settings.members.updateHeight();
+  });
+  
+  settings.container = document.createElement("div");
+  settings.container.id = "ct-settings-container";
+  settings.container.onclick = hideSettings;
+  
+  ROOT.appendChild(settings.container).appendChild(settings);
+  ROOT.appendChild(settings.background);
+  
+  let title = document.createElement("div");
+  title.innerHTML = '<h4 class="Ext">Configuration du script [HFR] Color Tag</h4>';
+  settings.appendChild(title);
+  
+  /* Tableau des paramètres configuration */
+  let parameters = document.createElement("table");
+  parameters.className = "main ct-table";
+  settings.appendChild(parameters);
+  
+  newHeaderRow(parameters, "Paramètres d'affichage par défaut", 2);
+  settings.cbButton = newParameter(parameters, "Afficher les pastilles");
+  settings.cbQuote = newParameter(parameters, "Afficher la pastille à côté du pseudo dans les citations");
+  settings.cbBackgroundPost = newParameter(parameters, "Colorier le fond des messages");
+  settings.cbBackgroundQuote = newParameter(parameters, "Colorier le fond des citations");
+  settings.cbObserveNewPost = newParameter(parameters, "Traiter les messages ajoutés via d'autres scripts");
+  newHeaderRow(parameters, "Palette de couleur", 2);
+  newColorRow(parameters, 2);
+  
+  settings.cbButton.onclick = () => {
+    if (db.config.displayButton && !settings.cbButton.checked)
+      alert("Pour accéder à cette page de configuration sans les pastilles, utiliser les commandes de script depuis le menu de l'extension.\nSi celui-ci est indisponible (par exemple avec Grease Monkey 4), faire un clic droit dans un topic et sélectionner « Paramètres HFR Color Tag ».");
   }
-}
-members.refresh = () => {
-  for (const row of document.querySelectorAll("#ct-members .profil")) {
-    row.parentElement.removeChild(row);
+  
+  let buttonContainer = document.createElement("div");
+  newSubmit("Importer", buttonContainer, importData);
+  newSubmit("Exporter", buttonContainer, exportData);
+  newSubmit("Valeurs par défaut", buttonContainer, defaultSettings);
+  newSubmit("Annuler", buttonContainer, hideSettings);
+  newSubmit("Valider", buttonContainer, applySettings);
+  settings.appendChild(buttonContainer);
+  
+  /* Tableau des membres */
+  let memberContainer = document.createElement("div");
+  memberContainer.className = "ct-member-container";
+  
+  settings.members = document.createElement("table");
+  settings.members.className = "main ct-table";
+  settings.members.id = "ct-members";
+  
+  newHeaderRow(settings.members, "Liste des membres", 7);
+  
+  settings.members.initialize = () => {
+    for (const name in db.members) {
+      let row = new Row(settings.members, name);
+    }
   }
-  members.initialize();
+  settings.members.refresh = () => {
+    for (const row of document.querySelectorAll("#ct-members .profil")) {
+      row.parentElement.removeChild(row);
+    }
+    settings.members.initialize();
+  }
+  settings.members.updateHeight = () => {
+    memberContainer.style.maxHeight = (document.documentElement.clientHeight - 360) + "px";
+  };
+  
+  settings.appendChild(memberContainer);
+  memberContainer.appendChild(settings.members);
+  settings.isOpen = false;
+  
+  settings.inputFieldSettings = document.createElement("input");
+  settings.inputFieldSettings.className = "ct-input-settings";
+  settings.inputFieldSettings.attach = function() {
+    if (settings.inputFieldSettings.row) settings.inputFieldSettings.save();
+    settings.inputFieldSettings.style.display = "block";
+    settings.inputFieldSettings.row = this.row;
+    settings.inputFieldSettings.row.note.innerHTML = "";
+    settings.inputFieldSettings.value = db.getParameters(settings.inputFieldSettings.row.name)[1];
+    settings.inputFieldSettings.row.note.appendChild(settings.inputFieldSettings);
+    settings.inputFieldSettings.focus();
+  }
+  settings.inputFieldSettings.save = () => {
+    db.setParameter(settings.inputFieldSettings.row.name, 1, settings.inputFieldSettings.value)
+    settings.inputFieldSettings.row.note.innerHTML = settings.inputFieldSettings.value;
+    settings.inputFieldSettings.style.display = "none";
+  }
+  settings.inputFieldSettings.onkeyup = (event) => {
+    if (event.keyCode == 13) settings.inputFieldSettings.save()
+  };
 }
-members.updateHeight = () => {
-  memberContainer.style.maxHeight = (document.documentElement.clientHeight - 360) + "px";
-};
-
-settings.appendChild(memberContainer);
-memberContainer.appendChild(members);
-settings.isOpen = false;
-
-let inputFieldSettings = document.createElement("input");
-inputFieldSettings.className = "ct-input-settings";
-inputFieldSettings.attach = function() {
-  if (inputFieldSettings.row) inputFieldSettings.save();
-  inputFieldSettings.style.display = "block";
-  inputFieldSettings.row = this.row;
-  inputFieldSettings.row.note.innerHTML = "";
-  inputFieldSettings.value = db.getParameters(inputFieldSettings.row.name)[1];
-  inputFieldSettings.row.note.appendChild(inputFieldSettings);
-  inputFieldSettings.focus();
-}
-inputFieldSettings.save = () => {
-  db.setParameter(inputFieldSettings.row.name, 1, inputFieldSettings.value)
-  inputFieldSettings.row.note.innerHTML = inputFieldSettings.value;
-  inputFieldSettings.style.display = "none";
-}
-inputFieldSettings.onkeyup = (event) => {
-  if (event.keyCode == 13) inputFieldSettings.save()
-};
 
 function openSettings() {
   menu.close();
   settings.isOpen = true;
-  background.style.display = "block";
-  settings.style.display = "block";
-  (background.offsetHeight); //repaint nécessaire pour amorcer la transition
-  background.style.opacity = "0.8";
+  settings.container.style.display = "flex";
+  settings.background.style.display = "block";
+  (settings.background.offsetHeight); //repaint nécessaire pour amorcer la transition
+  settings.background.style.opacity = "0.8";
   settings.style.opacity = "1";
   refreshSettings();
-  members.updateHeight();
+  settings.members.updateHeight();
 }
 
 function hideSettings() {
   settings.isOpen = false;
-  background.style.opacity = "0";
+  settings.background.style.opacity = "0";
   settings.style.opacity = "0";
 }
 
 function endTranstion() {
-  if (background.style.opacity == "0") {
-    background.style.display = "none";
-    settings.style.display = "none";
+  if (settings.background.style.opacity == "0") {
+    settings.background.style.display = "none";
+    settings.container.style.display = "none";
     document.removeEventListener("keypress", escapeKey, false);
   }
-  if (background.style.opacity == "0.8") {
+  if (settings.background.style.opacity == "0.8") {
     document.addEventListener("keypress", escapeKey, false);
   }
 }
@@ -908,7 +929,7 @@ function importData() {
         db.config = importedDB.config;
         db.members = importedDB.members;
         db.save();
-        members.refresh();
+        settings.members.refresh();
         refreshParticipants();
       } catch (err) {
         let message = (typeof err == "string") ? err : "le fichier n'est pas valide.";
@@ -1015,34 +1036,34 @@ function exportData() {
 }
 
 function defaultSettings() {
-  cbButton.checked = DEFAULTSTORAGE.config.displayButton;
-  cbQuote.checked = DEFAULTSTORAGE.config.displayQuote;
-  cbBackgroundPost.checked = DEFAULTSTORAGE.config.postBackground;
-  cbBackgroundQuote.checked = DEFAULTSTORAGE.config.quoteBackground;
-  cbObserveNewPost.checked = DEFAULTSTORAGE.config.observeNewPost;
+  settings.cbButton.checked = DEFAULTSTORAGE.config.displayButton;
+  settings.cbQuote.checked = DEFAULTSTORAGE.config.displayQuote;
+  settings.cbBackgroundPost.checked = DEFAULTSTORAGE.config.postBackground;
+  settings.cbBackgroundQuote.checked = DEFAULTSTORAGE.config.quoteBackground;
+  settings.cbObserveNewPost.checked = DEFAULTSTORAGE.config.observeNewPost;
   for (const box of document.getElementsByClassName("ct-palette")) {
     box.style.backgroundColor = DEFAULTSTORAGE.config.palette[box.index];
   }
 }
 
 function refreshSettings() {
-  cbButton.checked = db.config.displayButton;
-  cbQuote.checked = db.config.displayQuote;
-  cbBackgroundPost.checked = db.config.postBackground;
-  cbBackgroundQuote.checked = db.config.quoteBackground;
-  cbObserveNewPost.checked = db.config.observeNewPost;
+  settings.cbButton.checked = db.config.displayButton;
+  settings.cbQuote.checked = db.config.displayQuote;
+  settings.cbBackgroundPost.checked = db.config.postBackground;
+  settings.cbBackgroundQuote.checked = db.config.quoteBackground;
+  settings.cbObserveNewPost.checked = db.config.observeNewPost;
   for (const box of document.getElementsByClassName("ct-palette")) {
     box.style.backgroundColor = db.config.palette[box.index];
   }
-  members.refresh();
+  settings.members.refresh();
 }
 
 function applySettings() {
-  db.config.displayButton = cbButton.checked;
-  db.config.displayQuote = cbQuote.checked;
-  db.config.postBackground = cbBackgroundPost.checked;
-  db.config.quoteBackground = cbBackgroundQuote.checked;
-  db.config.observeNewPost = cbObserveNewPost.checked;
+  db.config.displayButton = settings.cbButton.checked;
+  db.config.displayQuote = settings.cbQuote.checked;
+  db.config.postBackground = settings.cbBackgroundPost.checked;
+  db.config.quoteBackground = settings.cbBackgroundQuote.checked;
+  db.config.observeNewPost = settings.cbObserveNewPost.checked;
   for (const box of document.getElementsByClassName("ct-palette")) {
     db.config.palette[box.index] = rgbToHex(box.style.backgroundColor);
   }
@@ -1090,16 +1111,50 @@ function rgbToHex(string) {
 
 /* Scanner un noeud DOM et lui rajouter les pastilles */
 function colorTag(node) {
-  for (const element of node.querySelectorAll(".messagetable b.s2, table.citation b.s1 a, table.oldcitation b.s1 a")) {
+  for (const element of node.querySelectorAll(".messagetable b.s2:not(.hfr-chat-dummy), table.citation b.s1 a, table.oldcitation b.s1 a")) {
     let post = new Post(element);
     if (!post.noAuthor) post.refresh();
   }
 }
 
-/*** Initialisation ***/
-GM.addStyle(STYLE);
-colorTag(ROOT);
-toggleObserver();
-GM.registerMenuCommand("Paramètres HFR Color Tag", openSettings, "p");
 
-})(); // Fin de l'exécution asynchrone
+/* Observateur pour gérer les messages ajoutés dynamiquement */
+let postObserver;
+
+function createObserver() {
+  postObserver = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      for (const message of mutation.addedNodes) {
+        colorTag(message);
+      }
+    };
+  });
+  toggleObserver();
+}
+
+function toggleObserver() {
+  if (db.config.observeNewPost) {
+    postObserver.observe(ROOT, {
+      childList: true
+    });
+  } else {
+    postObserver.disconnect();
+  }
+}
+
+async function initialize() {
+  createDB(DEFAULTSTRING);
+  createMenu();
+  createSettings();
+  GM.addStyle(STYLE);
+  colorTag(ROOT);
+  GM.registerMenuCommand("Paramètres HFR Color Tag", openSettings, "p");
+  const STORAGE = await GM.getValue("storage", DEFAULTSTRING);
+  createDB(STORAGE);
+  refreshParticipants();
+  settings.members.refresh();
+  createObserver();
+}
+
+/*** Initialisation ***/
+initialize();

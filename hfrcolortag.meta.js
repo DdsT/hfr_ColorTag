@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   ddst.github.io
-// @version     2.3.1
+// @version     2.3.2
 // @author      DdsT
 // @downloadURL https://ddst.github.io/hfr_ColorTag/hfrcolortag.user.js
 // @updateURL   https://ddst.github.io/hfr_ColorTag/hfrcolortag.meta.js
+// @supportURL  https://ddst.github.io/hfr_ColorTag/
 // @description Colorier et Annoter les messages en fonction du pseudo
 // @icon        https://www.hardware.fr/images_skin_2010/facebook/logo.png
 // @match       *://forum.hardware.fr/forum2.php*

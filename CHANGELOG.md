@@ -1,6 +1,12 @@
 
 # Historique
 
+## v2.3.2 (2020-03-13)
+
+- Amélioration de la compatibilité avec [HFR] Chat v1.0.2
+- Refonte du code pour un démarrage plus rapide
+- Amélioration de l'affichage de la page de configuration pour certains navigateurs
+
 ## v2.3.1 (2018-12-20)
 
 - Correction d'un bug lors de la récupération du nom du topic (topic verrouillé, réponse rapide indisponible...)

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        [HFR] Color Tag
 // @namespace   ddst.github.io
-// @version     2.3.2
+// @version     2.3.3
 // @author      DdsT
 // @downloadURL https://ddst.github.io/hfr_ColorTag/hfrcolortag.user.js
 // @updateURL   https://ddst.github.io/hfr_ColorTag/hfrcolortag.meta.js
@@ -35,11 +35,9 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see https://ddst.github.io/hfr_ColorTag/LICENSE.
 */
 
-/* v2.3.2
+/* v2.3.3
  * ------
- * Amélioration de la compatibilité avec [HFR] Chat v1.0.2
- * Refonte du code pour un démarrage plus rapide
- * Amélioration de l'affichage de la page de configuration pour certains navigateurs
+ * Correction d'un bug lors d'un clic sur le panneau de configuration
  */
 
 const STYLE = `
@@ -168,32 +166,33 @@ const STYLE = `
   height           : 100%;
   width            : 100%;
   background-color : #fff;
-  z-index          : 1001;
+  z-index          : 1002;
   display          : none;
   opacity          : 0;
   transition       : opacity 0.7s ease 0s;
 }
 
 #ct-settings-container {
-    position    : fixed;
-    left        : 0;
-    right       : 0;
-    top         : 0;
-    bottom      : 0;
-    z-index     : 1002;
-    display     : none;
+    position       : fixed;
+    left           : 0;
+    right          : 0;
+    top            : 0;
+    bottom         : 0;
+    z-index        : 1001;
+    display        : none;
 }
 
 #ct-settings {
-  box-shadow  : 0 4px  8px 0 rgba(0, 0, 0, 0.2),
-                0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  position    : static;
-  background  : white;
-  display     : block;
-  opacity     : 0;
-  margin      : auto auto;
-  transition  : opacity 0.7s ease 0s;
-  padding     : 0 16px 16px 16px;
+  box-shadow : 0 4px  8px 0 rgba(0, 0, 0, 0.2),
+              0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  position   : static;
+  background : white;
+  display    : block;
+  opacity    : 0;
+  margin     : auto auto;
+  transition : opacity 0.7s ease 0s;
+  padding    : 0 16px 16px 16px;
+  z-index    : 1003;
 }
 .ct-table {
   border-spacing : 0px;
@@ -794,10 +793,10 @@ function createSettings() {
   
   settings.container = document.createElement("div");
   settings.container.id = "ct-settings-container";
-  settings.container.onclick = hideSettings;
+  settings.background.onclick = hideSettings;
   
   ROOT.appendChild(settings.container).appendChild(settings);
-  ROOT.appendChild(settings.background);
+  settings.container.appendChild(settings.background);
   
   let title = document.createElement("div");
   title.innerHTML = '<h4 class="Ext">Configuration du script [HFR] Color Tag</h4>';

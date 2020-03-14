@@ -1,6 +1,9 @@
 
 # Historique
 
+## v2.3.3 (2020-03-14)
+- Correction d'un bug lors d'un clic sur le panneau de configuration
+
 ## v2.3.2 (2020-03-13)
 
 - Amélioration de la compatibilité avec [HFR] Chat v1.0.2

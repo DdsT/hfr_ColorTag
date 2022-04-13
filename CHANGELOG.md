@@ -1,6 +1,9 @@
 
 # Historique
 
+## v2.3.4 (2022-04-13)
+- Correction d'un bug de compatibilité avec Tamper Monkey 4.16.6160
+
 ## v2.3.3 (2020-03-14)
 - Correction d'un bug lors d'un clic sur le panneau de configuration
 

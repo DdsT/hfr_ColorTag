@@ -18,7 +18,7 @@ Permet de colorier les messages et citations en fonction du membre ainsi que de 
   - Chrome v71
 - Extensions :
   - Greasemonkey v4
-  - Tampermonkey v4.6
+  - Tampermonkey v4.16.6160
   - Violentmonkey v2.10
 
 ## Historique
